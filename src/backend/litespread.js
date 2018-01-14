@@ -48,7 +48,9 @@ function make_formatted_view(db, table) {
     var summary = table.columns.map(
         col => {
             var summary = summaries[col.summary || 'undefined'];
-            if (summary === undefined) {throw "Unknown summary: " + col.summary};
+            if (summary === undefined) {
+                throw Error("Unknown summary: " + col.summary)
+            };
             return format_col(col, summary(col.name));
         }
     ).join(', ');
