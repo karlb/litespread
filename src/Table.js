@@ -74,7 +74,7 @@ class Table extends React.Component {
                 SET ${set}
                 WHERE _rowid_ IN (${row_ids.join(', ')})
         `);
-        this.updateFromDb(this.props.db);
+        this.props.onChange();
     };
 
     rowGetter = (rowIndex) => {
@@ -92,8 +92,11 @@ class Table extends React.Component {
     };
 
     componentWillReceiveProps = (nextProps) => {
-        if (nextProps.db) {
+        if (nextProps.last_db_change !== this.state.last_refresh) {
             this.updateFromDb(nextProps.db);
+            this.setState({
+                last_refresh: nextProps.last_db_change,
+            });
         }
     }
 

@@ -73,6 +73,7 @@ class App extends Component {
         super(props, context);
         this.state = {
             db: null,
+            last_db_change: null,
         }
     }
 
@@ -93,7 +94,12 @@ class App extends Component {
     render() {
         return (
                 <div className="App">
-                <Table db={this.state.db} table={doc.tables[0]}/>
+                <Table
+                    db={this.state.db}
+                    table={doc.tables[0]}
+                    last_db_change={this.state.last_db_change}
+                    onChange={() => this.setState({last_db_change: new Date()})}
+                />
                 </div>
                );
     }
