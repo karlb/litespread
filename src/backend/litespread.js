@@ -25,14 +25,21 @@ function make_col(col) {
 
 
 function make_raw_view(db, table) {
-    var from_clause = table.from || table.name;
+    var from_clause, rowid;
+    if (table.from) {
+        from_clause = table.from;
+        rowid = 'null AS rowid';
+    } else {
+        from_clause = table.name;
+        rowid = 'rowid';
+    }
     var select = table.columns.map(make_col).join(', ');
     // console.log(select);
 
     db.run(`
         DROP VIEW IF EXISTS ${table.name}_raw;
         CREATE VIEW ${table.name}_raw AS
-        SELECT rowid, ${select} FROM ${from_clause}
+        SELECT ${rowid}, ${select} FROM ${from_clause}
     `);
 }
 
