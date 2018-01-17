@@ -3,7 +3,7 @@ import ReactDataGrid from 'react-data-grid';
 
 
 function entries(obj) {
-    var ownProps = Object.keys(obj),
+    let ownProps = Object.keys(obj),
     i = ownProps.length,
     resArray = new Array(i);  // preallocate the Array
     while (i--)
@@ -13,7 +13,7 @@ function entries(obj) {
 };
 
 
-var formatter_alignment = {
+let formatter_alignment = {
     'undefined': 'left',
     'money': 'right',
 };
@@ -59,19 +59,19 @@ class Table extends React.Component {
     }
 
     updateFromDb(db) {
-        var result = db.exec(`SELECT * FROM ${this.props.table.name}_formatted`);
-        var rows = result[0].values.map(row => row);
+        let result = db.exec(`SELECT * FROM ${this.props.table.name}_formatted`);
+        let rows = result[0].values.map(row => row);
         this.setState({
             rows: rows,
         });
     }
 
     handleGridRowsUpdated = ({ fromRow, toRow, updated }) => {
-        var row_ids = [];
+        let row_ids = [];
         for (let i = fromRow; i <= toRow; i++) {
             row_ids.push(this.state.rows[i][0]);
         }
-        var set = entries(updated).map(
+        let set = entries(updated).map(
                 item => `${item[0]} = '${item[1]}'`
             ).join(', ');
         this.props.db.exec(`
@@ -83,7 +83,7 @@ class Table extends React.Component {
     };
 
     rowGetter = (rowIndex) => {
-        var row = {};
+        let row = {};
         this.state.rows[rowIndex].forEach(
             (value, i) => {
                 if (i === 0) {

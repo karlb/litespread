@@ -5,7 +5,7 @@ import { update_document } from './backend/litespread.js'
 import SQL from 'sql.js'
 import Table from './Table.js'
 
-var doc = {
+let doc = {
     'tables': [
         {
             'name': 'inventory',
@@ -80,13 +80,13 @@ class App extends Component {
     }
 
     componentDidMount() {
-        var self = this;
-        var xhr = new XMLHttpRequest();
+        let self = this;
+        let xhr = new XMLHttpRequest();
         xhr.open('GET', '/test.sqlite3', true);
         xhr.responseType = 'arraybuffer';
         xhr.onload = function(e) {
-            var uInt8Array = new Uint8Array(this.response);
-            var db = new SQL.Database(uInt8Array);
+            let uInt8Array = new Uint8Array(this.response);
+            let db = new SQL.Database(uInt8Array);
             update_document(db, doc);
             self.setState({db: db, last_db_change:new Date()});
         };
