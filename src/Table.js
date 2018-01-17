@@ -21,11 +21,11 @@ var formatter_alignment = {
 
 function CustomHeader(props) {
     const col = props.column;
-    var header = <div className="{col.cellClass}">{col.key}</div>;
-    if (col.formula) {
-        return [header, <div>= {col.formula}</div>];
-    }
-    return header;
+    return (
+        <div className="{col.cellClass}">{col.key}
+            {col.formula && <div>= {col.formula}</div>}
+        </div>
+    );
 }
 
 class Table extends React.Component {
@@ -45,7 +45,7 @@ class Table extends React.Component {
                 name: col.name,
                 cellClass: 'text-' + formatter_alignment[col.formatter || 'undefined'],
                 editable: !col.formula,
-                // headerRenderer: CustomHeader,
+                headerRenderer: CustomHeader,
                 formula: col.formula,
             })),
             name: props.table.name
