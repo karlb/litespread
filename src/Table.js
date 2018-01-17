@@ -47,12 +47,19 @@ class Table extends React.Component {
                 editable: !col.formula,
                 // headerRenderer: CustomHeader,
                 formula: col.formula,
-            }))
+            })),
+            name: props.table.name
         };
     }
 
+    componentWillMount() {
+        if (this.props.db) {
+            this.updateFromDb(this.props.db);
+        }
+    }
+
     updateFromDb(db) {
-        var result = db.exec("SELECT * FROM inventory_formatted");
+        var result = db.exec(`SELECT * FROM ${this.props.table.name}_formatted`);
         var rows = result[0].values.map(row => row);
         this.setState({
             rows: rows,
@@ -60,7 +67,6 @@ class Table extends React.Component {
     }
 
     handleGridRowsUpdated = ({ fromRow, toRow, updated }) => {
-        console.log(fromRow, toRow, updated);
         var row_ids = [];
         for (let i = fromRow; i <= toRow; i++) {
             row_ids.push(this.state.rows[i][0]);
@@ -68,7 +74,6 @@ class Table extends React.Component {
         var set = entries(updated).map(
                 item => `${item[0]} = '${item[1]}'`
             ).join(', ');
-        console.log(row_ids, set);
         this.props.db.exec(`
                 UPDATE inventory
                 SET ${set}

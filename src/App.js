@@ -72,8 +72,10 @@ class App extends Component {
     constructor(props, context) {
         super(props, context);
         this.state = {
+            doc: doc,
             db: null,
             last_db_change: null,
+            current_table: doc.tables[0].name,
         }
     }
 
@@ -86,7 +88,7 @@ class App extends Component {
             var uInt8Array = new Uint8Array(this.response);
             var db = new SQL.Database(uInt8Array);
             update_document(db, doc);
-            self.setState({db: db});
+            self.setState({db: db, last_db_change:new Date()});
         };
         xhr.send();
     }
@@ -94,12 +96,25 @@ class App extends Component {
     render() {
         return (
                 <div className="App">
-                <Table
-                    db={this.state.db}
-                    table={doc.tables[0]}
-                    last_db_change={this.state.last_db_change}
-                    onChange={() => this.setState({last_db_change: new Date()})}
-                />
+                <ul className="nav nav-tabs">
+                    {this.state.doc.tables.map((table) =>
+                        <li role="presentation"
+                            className={table.name === this.state.current_table ? 'active' : null}
+                            key={table.name}
+                            onClick={() => this.setState({current_table: table.name})}
+                        ><a href="#">{table.name}</a></li>
+                    )}
+                </ul>
+                {this.state.doc.tables.map( table =>
+                    (table.name === this.state.current_table) &&
+                    <Table
+                        db={this.state.db}
+                        table={table}
+                        key={table.name}
+                        last_db_change={this.state.last_db_change}
+                        onChange={() => this.setState({last_db_change: new Date()})}
+                    />
+                )}
                 </div>
                );
     }
