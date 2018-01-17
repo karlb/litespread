@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDataGrid from 'react-data-grid';
-
+import update from 'immutability-helper';
 
 function entries(obj) {
     let ownProps = Object.keys(obj),
@@ -19,11 +19,47 @@ let formatter_alignment = {
 };
 
 
+class EditableText extends React.Component {
+
+    constructor(props, context) {
+        super(props, context);
+        this.state = {
+            editing: false,
+            value: props.children,
+        };
+    }
+
+    onChange = (event) => {
+        this.setState({value: event.target.value});
+    }
+
+    onChangeDone = (event) => {
+        this.props.onChange(event.target.value);
+    }
+
+    render() {
+        if (this.state.editing === true) {
+            return <input
+                autoFocus
+                type="text"
+                value={this.state.value}
+                onChange={this.onChange}
+                onBlur={(event) => {this.onChangeDone(event); this.setState({editing: false})}}
+            />;
+        } else {
+            return <span onClick={() => this.setState({editing: true})}>{this.props.children}</span>;
+        }
+    }
+}
+
+
 function CustomHeader(props) {
     const col = props.column;
     return (
         <div className="{col.cellClass}">{col.key}
-            {col.formula && <div>= {col.formula}</div>}
+            {col.formula && <div>
+                = <EditableText onChange={col.onFormulaChange}>{col.formula}</EditableText>
+            </div>}
         </div>
     );
 }
@@ -40,16 +76,26 @@ class Table extends React.Component {
 
         this.state = {
             rows: [],
-            columns: props.table.columns.map(col => ({
-                key: col.name,
-                name: col.name,
-                cellClass: 'text-' + formatter_alignment[col.formatter || 'undefined'],
-                editable: !col.formula,
-                headerRenderer: CustomHeader,
-                formula: col.formula,
-            })),
-            name: props.table.name
+            columns: this.makeColumns(props),
+            name: props.table.name,
         };
+    }
+
+    makeColumns(props) {
+        return props.table.columns.map((col, colIndex) => ({
+            key: col.name,
+            name: col.name,
+            cellClass: 'text-' + formatter_alignment[col.formatter || 'undefined'],
+            editable: !col.formula,
+            headerRenderer: CustomHeader,
+            formula: col.formula,
+            onFormulaChange: formula => {
+                    let updateDesc = {columns: {}};
+                    updateDesc.columns[colIndex] = {formula: {$set: formula}};
+                    props.onSchemaChange(
+                            update(props.table, updateDesc));
+                },
+        }))
     }
 
     componentWillMount() {
@@ -79,7 +125,7 @@ class Table extends React.Component {
                 SET ${set}
                 WHERE _rowid_ IN (${row_ids.join(', ')})
         `);
-        this.props.onChange();
+        this.props.onDataChange();
     };
 
     rowGetter = (rowIndex) => {
@@ -103,6 +149,7 @@ class Table extends React.Component {
                 last_refresh: nextProps.last_db_change,
             });
         }
+        this.setState({columns: this.makeColumns(nextProps)});
     }
 
     render() {

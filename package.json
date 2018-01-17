@@ -5,6 +5,7 @@
   "dependencies": {
     "bootstrap": "^3.3.7",
     "create-react-class": "^15.6.2",
+    "immutability-helper": "^2.6.4",
     "react": "^16.2.0",
     "react-data-grid": "^3.0.3",
     "react-dom": "^16.2.0",

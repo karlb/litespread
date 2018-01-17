@@ -105,14 +105,19 @@ class App extends Component {
                         ><a href="#">{table.name}</a></li>
                     )}
                 </ul>
-                {this.state.doc.tables.map( table =>
+                {this.state.doc.tables.map( (table, tableIndex) =>
                     (table.name === this.state.current_table) &&
                     <Table
                         db={this.state.db}
                         table={table}
                         key={table.name}
                         last_db_change={this.state.last_db_change}
-                        onChange={() => this.setState({last_db_change: new Date()})}
+                        onDataChange={() => this.setState({last_db_change: new Date()})}
+                        onSchemaChange={(table) => {
+                            this.state.doc.tables[tableIndex] = table;
+                            update_document(this.state.db, this.state.doc);
+                            this.setState({last_db_change: new Date()});
+                        }}
                     />
                 )}
                 </div>
