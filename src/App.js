@@ -1,9 +1,13 @@
 import React, { Component } from 'react';
 import './App.css';
-import 'bootstrap/dist/css/bootstrap.css';
 import { update_document } from './backend/litespread.js'
 import SQL from 'sql.js'
-import Table from './Table.js'
+import SpreadTable from './SpreadTable.js'
+import { EditableText, Tab, Tabs, FocusStyleManager, Navbar, NavbarGroup,
+    NavbarHeading, NavbarDivider, Button, IconClasses
+} from "@blueprintjs/core";
+import "@blueprintjs/core/lib/css/blueprint.css";
+import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 
 let doc = {
     'tables': [
@@ -95,34 +99,51 @@ class App extends Component {
 
     render() {
         return (
-                <div className="App">
-                <ul className="nav nav-tabs">
-                    {this.state.doc.tables.map((table) =>
-                        <li role="presentation"
-                            className={table.name === this.state.current_table ? 'active' : null}
-                            key={table.name}
-                            onClick={() => this.setState({current_table: table.name})}
-                        ><a href="#">{table.name}</a></li>
-                    )}
-                </ul>
-                {this.state.doc.tables.map( (table, tableIndex) =>
-                    (table.name === this.state.current_table) &&
-                    <Table
-                        db={this.state.db}
-                        table={table}
-                        key={table.name}
-                        last_db_change={this.state.last_db_change}
-                        onDataChange={() => this.setState({last_db_change: new Date()})}
-                        onSchemaChange={(table) => {
-                            this.state.doc.tables[tableIndex] = table;
-                            update_document(this.state.db, this.state.doc);
-                            this.setState({last_db_change: new Date()});
-                        }}
-                    />
-                )}
-                </div>
-               );
+            <div className="App">
+                <Navbar>
+                    <NavbarGroup>
+                        <NavbarHeading>Litespread</NavbarHeading>
+                    </NavbarGroup>
+                    <NavbarGroup align="right">
+                        <Button className="pt-minimal" iconName="home">Home</Button>
+                        <Button className="pt-minimal" iconName="document">Files</Button>
+                        <NavbarDivider />
+                        <Button className="pt-minimal" iconName="user"></Button>
+                        <Button className="pt-minimal" iconName="notifications"></Button>
+                        <Button className="pt-minimal" iconName="cog"></Button>
+                    </NavbarGroup>
+                </Navbar>
+                <Tabs id="TableTabs"
+                    defaultSelectedTabId="table-tab-0"
+                    vertical={true}
+                    //renderActiveTabPanelOnly={true}
+                >
+                    {this.state.doc.tables.map((table, tableIndex) => (
+                        <Tab id={"table-tab-" + tableIndex} title={table.name} key={tableIndex} panel={(
+                            <SpreadTable
+                                db={this.state.db}
+                                table={table}
+                                key={table.name}
+                                last_db_change={this.state.last_db_change}
+                                onDataChange={() => this.setState({last_db_change: new Date()})}
+                                onSchemaChange={(table) => {
+                                    this.state.doc.tables[tableIndex] = table;
+                                    update_document(this.state.db, this.state.doc);
+                                    this.setState({last_db_change: new Date()});
+                                }}
+                            />
+                        )} />
+                    ))}
+                    {/*
+                    <Tabs.Expander />
+                    <input className="pt-input" type="text" placeholder="Search..." />
+                    */}
+                </Tabs>
+            </div>
+       );
     }
 }
+
+FocusStyleManager.onlyShowFocusOnTabs();
 
 export default App;
