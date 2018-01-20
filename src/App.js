@@ -8,6 +8,8 @@ import { EditableText, Tab, Tabs, FocusStyleManager, Navbar, NavbarGroup,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import "@blueprintjs/icons/lib/css/blueprint-icons.css";
+import RemoteStorage from 'remotestoragejs';
+import Widget from 'remotestorage-widget';
 
 let doc = {
     'tables': [
@@ -84,17 +86,33 @@ class App extends Component {
     }
 
     componentDidMount() {
-        let self = this;
-        let xhr = new XMLHttpRequest();
-        xhr.open('GET', '/test.sqlite3', true);
-        xhr.responseType = 'arraybuffer';
-        xhr.onload = function(e) {
-            let uInt8Array = new Uint8Array(this.response);
-            let db = new SQL.Database(uInt8Array);
-            update_document(db, doc);
-            self.setState({db: db, last_db_change:new Date()});
-        };
-        xhr.send();
+        const self = this;
+        const fromRemote = true;
+        if (fromRemote) {
+            remoteClient.getFile('test.sqlite').then(file => {
+                file.data
+                let uInt8Array = new Uint8Array(file.data);
+                let db = new SQL.Database(uInt8Array);
+                update_document(db, doc);
+                self.setState({db: db, last_db_change:new Date()});
+            });
+        } else {
+            let xhr = new XMLHttpRequest();
+            xhr.open('GET', '/test.sqlite3', true);
+            xhr.responseType = 'arraybuffer';
+            xhr.onload = function(e) {
+                let uInt8Array = new Uint8Array(this.response);
+                let db = new SQL.Database(uInt8Array);
+                update_document(db, doc);
+                self.setState({db: db, last_db_change:new Date()});
+            };
+            xhr.send();
+        }
+    }
+
+    onDataChange = () => {
+        this.setState({last_db_change: new Date()});
+        remoteClient.storeFile('application/x-sqlite3', 'test.sqlite', this.state.db.export().buffer)
     }
 
     render() {
@@ -125,7 +143,7 @@ class App extends Component {
                                 table={table}
                                 key={table.name}
                                 last_db_change={this.state.last_db_change}
-                                onDataChange={() => this.setState({last_db_change: new Date()})}
+                                onDataChange={this.onDataChange}
                                 onSchemaChange={(table) => {
                                     this.state.doc.tables[tableIndex] = table;
                                     update_document(this.state.db, this.state.doc);
@@ -143,6 +161,16 @@ class App extends Component {
        );
     }
 }
+
+const remoteDir = 'litespread'
+const remoteStorage = new RemoteStorage();
+remoteStorage.access.claim(remoteDir, 'rw');
+remoteStorage.caching.enable('/' + remoteDir +'/')
+const remoteClient = remoteStorage.scope('/' + remoteDir +'/');
+window.remoteClient = remoteClient;
+
+const widget = new Widget(remoteStorage);
+widget.attach();
 
 FocusStyleManager.onlyShowFocusOnTabs();
 
