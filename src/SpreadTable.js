@@ -1,7 +1,8 @@
 import React from 'react';
 import update from 'immutability-helper';
-import { Table, Column, EditableCell, Cell, ColumnHeaderCell } from "@blueprintjs/table";
+import { Table, Column, EditableCell, Cell, ColumnHeaderCell, EditableName } from "@blueprintjs/table";
 import { Button, Intent, EditableText } from "@blueprintjs/core";
+import * as ls from './backend/litespread.js'
 import "@blueprintjs/table/lib/css/table.css";
 
 function entries(obj) {
@@ -27,14 +28,8 @@ class SpreadTable extends React.Component {
         super(props, context);
         this.state = {
             rows: [],
-            name: props.table.name,
+            table: null,
         };
-    }
-
-    makeColumns(props) {
-        return props.table.columns.map((col, colIndex) => ({
-            cellClass: 'text-' + formatter_alignment[col.formatter || 'undefined'],
-        }))
     }
 
     componentWillMount() {
@@ -44,18 +39,20 @@ class SpreadTable extends React.Component {
     }
 
     updateFromDb(db) {
-        let result = db.exec(`SELECT * FROM ${this.props.table.name}_formatted`);
-        let rows = result[0].values.map(row => row);
+        const result = db.exec(`SELECT * FROM ${this.props.table_name}_formatted`);
+        const rows = result[0].values;
+
         this.setState({
             rows: rows,
+            table: ls.getTableDesc(db, this.props.table_name),
         });
     }
 
     onCellChange = (value, rowIndex, colIndex) => {
         let row = this.state.rows[rowIndex];
         let sql = `
-                UPDATE ${this.props.table.name}
-                SET ${this.props.table.columns[colIndex].name} = '${value}'
+                UPDATE ${this.props.table_name}
+                SET ${this.state.table.columns[colIndex].name} = '${value}'
                 WHERE _rowid_ = ${row[0]}
         `;
         this.props.db.exec(sql);
@@ -68,6 +65,11 @@ class SpreadTable extends React.Component {
         this.props.onSchemaChange(update(this.props.table, updateDesc));
     }
 
+    changeColumnName = (colIndex, newName) => {
+        ls.changeColumnName(this.props.db, this.state.table, colIndex, newName);
+        this.props.onSchemaChange();
+    }
+
     componentWillReceiveProps = (nextProps) => {
         if (nextProps.last_db_change !== this.state.last_refresh) {
             this.updateFromDb(nextProps.db);
@@ -77,23 +79,45 @@ class SpreadTable extends React.Component {
         }
     }
 
+    addColumn = () => {
+        this.props.db.run(`
+            INSERT INTO litespread_column(table_name, name)
+            VALUES ('${this.props.table_name}', 'new col');
+        `);
+        this.props.onSchemaChange();
+    }
+
     render() {
-        return  (
-            <Table numRows={this.state.rows.length}>
-                {this.props.table.columns.map((col, colIndex) => (
-                    <Column
-                        key={col.name}
-                        name={col.name}
-                        cellRenderer={this.cellRenderer}
-                        columnHeaderCellRenderer={this.columnHeaderCellRenderer}
-                    />
-                ))}
-            </Table>
+        if (this.props.db === null) {
+            return null;
+        }
+        return (
+            <div className="text-left">
+                <div className="pt-button-group">
+                  <a className="pt-button pt-icon-add-column-right" tabIndex="0" role="button"
+                    onClick={this.addColumn}
+                  >Add Column</a>
+                  <a className="pt-button pt-icon-add-row-bottom" tabIndex="0" role="button">Add Row</a>
+                </div>
+                <Table
+                    numRows={this.state.rows.length}
+                    enableColumnInteractionBar={true}
+                >
+                    {this.state.table.columns.map((col, colIndex) => (
+                        <Column
+                            key={col.name}
+                            name={col.name}
+                            cellRenderer={this.cellRenderer}
+                            columnHeaderCellRenderer={this.columnHeaderCellRenderer}
+                        />
+                    ))}
+                </Table>
+            </div>
         );
     }
 
     cellRenderer = (rowIndex, colIndex) => {
-        let col = this.props.table.columns[colIndex];
+        let col = this.state.table.columns[colIndex];
         return (
             <EditableCell
                 onConfirm={(value) => this.onCellChange(value, rowIndex, colIndex)}
@@ -103,10 +127,18 @@ class SpreadTable extends React.Component {
         );
     }
 
+    nameRenderer = (name, colIndex) => {
+        return <EditableName name={name} onConfirm={(value) => this.changeColumnName(colIndex, value)}/>
+    }
+
     columnHeaderCellRenderer = (colIndex) => {
-        let formula = this.props.table.columns[colIndex].formula;
+        let formula = this.state.table.columns[colIndex].formula;
         return (
-            <ColumnHeaderCell name={this.props.table.columns[colIndex].name}>
+            <ColumnHeaderCell
+                name={this.state.table.columns[colIndex].name}
+                nameRenderer={this.nameRenderer}
+                index={colIndex}
+            >
                 {formula && <EditableText
                     defaultValue={formula}
                     onConfirm={(newFormula) => this.onFormulaChange(newFormula, colIndex)}

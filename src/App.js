@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
-import { update_document } from './backend/litespread.js'
+import { updateDocument, importDocument } from './backend/litespread.js'
 import SQL from 'sql.js'
 import SpreadTable from './SpreadTable.js'
 import { EditableText, Tab, Tabs, FocusStyleManager, Navbar, NavbarGroup,
@@ -40,7 +40,7 @@ let doc = {
                 },
             ],
         },
-        {
+        /*{
             'name': 'joined_table',
             'from': 'inventory JOIN sales USING (name)',
             'columns': [
@@ -66,7 +66,7 @@ let doc = {
                     'summary': 'avg',
                 }
             ],
-        },
+        },*/
     ],
 }
 
@@ -78,22 +78,21 @@ class App extends Component {
     constructor(props, context) {
         super(props, context);
         this.state = {
-            doc: doc,
             db: null,
             last_db_change: null,
-            current_table: doc.tables[0].name,
+            tables: [],
         }
     }
 
     componentDidMount() {
         const self = this;
-        const fromRemote = true;
+        const fromRemote = false;
         if (fromRemote) {
             remoteClient.getFile('test.sqlite').then(file => {
                 file.data
                 let uInt8Array = new Uint8Array(file.data);
                 let db = new SQL.Database(uInt8Array);
-                update_document(db, doc);
+                updateDocument(db, doc);
                 self.setState({db: db, last_db_change:new Date()});
             });
         } else {
@@ -103,16 +102,34 @@ class App extends Component {
             xhr.onload = function(e) {
                 let uInt8Array = new Uint8Array(this.response);
                 let db = new SQL.Database(uInt8Array);
-                update_document(db, doc);
-                self.setState({db: db, last_db_change:new Date()});
+                importDocument(db);
+                updateDocument(db, doc);
+                self.receiveDb(db);
             };
             xhr.send();
         }
     }
 
+    receiveDb = (db) => {
+        const tables = db.exec("SELECT table_name FROM litespread_table")[0]
+            .values.map(row => row[0]);
+        window.db = db;  // for debugging
+        this.setState({
+            db: db,
+            last_db_change:new Date(),
+            tables: tables,
+            current_table: tables[0],
+        });
+    }
+
     onDataChange = () => {
         this.setState({last_db_change: new Date()});
         remoteClient.storeFile('application/x-sqlite3', 'test.sqlite', this.state.db.export().buffer)
+    }
+
+    onSchemaChange = (table) => {
+        updateDocument(this.state.db);
+        this.setState({last_db_change: new Date()});
     }
 
     render() {
@@ -136,19 +153,15 @@ class App extends Component {
                     vertical={true}
                     //renderActiveTabPanelOnly={true}
                 >
-                    {this.state.doc.tables.map((table, tableIndex) => (
-                        <Tab id={"table-tab-" + tableIndex} title={table.name} key={tableIndex} panel={(
+                    {this.state.tables.map((table_name, tableIndex) => (
+                        <Tab id={"table-tab-" + tableIndex} title={table_name} key={tableIndex} panel={(
                             <SpreadTable
                                 db={this.state.db}
-                                table={table}
-                                key={table.name}
+                                table_name={table_name}
+                                key={table_name}
                                 last_db_change={this.state.last_db_change}
                                 onDataChange={this.onDataChange}
-                                onSchemaChange={(table) => {
-                                    this.state.doc.tables[tableIndex] = table;
-                                    update_document(this.state.db, this.state.doc);
-                                    this.setState({last_db_change: new Date()});
-                                }}
+                                onSchemaChange={this.onSchemaChange}
                             />
                         )} />
                     ))}
