@@ -1,3 +1,4 @@
+'use strict';
 // var sql = require('sql.js');
 // var parser = require('./libs/sqlite-parser.js');
 
@@ -143,7 +144,6 @@ function changeColumnName(db, table, colIndex, newName, skipCommit) {
             SET name='${newName}'
             WHERE table_name = '${table.name}' AND position = ${colIndex};
     `
-    console.log(q);
     db.exec(q);
     if (!skipCommit) { db.run("COMMIT"); console.log('commit', newName) }
 }
@@ -161,5 +161,17 @@ function getTableDesc(db, table_name) {
     }
 }
 
+function addColumn(db, tableName, colName) {
+    db.run(`
+        ALTER TABLE ${tableName} ADD COLUMN '${colName}';
+        INSERT INTO litespread_column(table_name, name, position)
+        VALUES ('${tableName}', '${colName}', (
+                SELECT max(position) + 1
+                FROM litespread_column
+                WHERE table_name = '${tableName}'
+            ));
+    `);
+}
 
-export { updateDocument, importDocument, changeColumnName, getTableDesc }; 
+
+export { updateDocument, importDocument, changeColumnName, getTableDesc, addColumn }; 

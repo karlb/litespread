@@ -80,10 +80,7 @@ class SpreadTable extends React.Component {
     }
 
     addColumn = () => {
-        this.props.db.run(`
-            INSERT INTO litespread_column(table_name, name)
-            VALUES ('${this.props.table_name}', 'new col');
-        `);
+        ls.addColumn(this.props.db, this.props.table_name, 'new_col')
         this.props.onSchemaChange();
     }
 

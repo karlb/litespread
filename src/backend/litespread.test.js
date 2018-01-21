@@ -15,10 +15,12 @@ function createTestDB() {
 
 
 it('updateDocument', () => {
-    const filename = '../test.sqlite3';
-    const filebuffer = fs.readFileSync(filename);
-    const db = new sql.Database(filebuffer);
-    //ls.updateDocument(db);
+    const db = createTestDB();
+    ls.importDocument(db);
+    ls.updateDocument(db);
+    // const filename = '../test.sqlite3';
+    // const filebuffer = fs.readFileSync(filename);
+    // const db = new sql.Database(filebuffer);
     //const data = db.export();
     //const buffer = new Buffer(data);
     //fs.writeFileSync(filename, buffer);
@@ -59,4 +61,33 @@ it('changeColumnName', () => {
     }
     testChange(0, 'emp_name', 'CREATE TABLE employee (emp_name,department_id)');
     testChange(1, 'department', 'CREATE TABLE employee (name,department)');
+
+    ls.updateDocument(db);
+});
+
+
+it('addColumn', () => {
+    const db = createTestDB();
+    ls.importDocument(db);
+    ls.addColumn(db, 'employee', 'employed_since');
+
+    let rows = db.exec(`
+        SELECT name FROM litespread_column
+        WHERE table_name ='employee' ORDER BY position
+    `)[0].values;
+    expect(rows[0]).toEqual(['name'])
+    expect(rows[1]).toEqual(['department_id'])
+    expect(rows[2]).toEqual(['employed_since'])
+
+    ls.updateDocument(db);
+});
+
+
+it('rename new column', () => {
+    const db = createTestDB();
+    ls.importDocument(db);
+    ls.addColumn(db, 'employee', 'employed_since');
+    const table = ls.getTableDesc(db, 'employee')
+    ls.changeColumnName(db, table, 2, 'work_start');
+    ls.updateDocument(db);
 });
