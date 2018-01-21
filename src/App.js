@@ -134,7 +134,7 @@ class App extends Component {
         remoteClient.storeFile('application/x-sqlite3', 'test.sqlite', this.state.db.export().buffer)
     }
 
-    onSchemaChange = (table) => {
+    onSchemaChange = () => {
         updateDocument(this.state.db);
         this.setState({last_db_change: new Date()});
     }
@@ -164,7 +164,7 @@ class App extends Component {
                         <Tab id={"table-tab-" + tableIndex} title={table_name} key={tableIndex} panel={(
                             <SpreadTable
                                 db={this.state.db}
-                                table_name={table_name}
+                                tableName={table_name}
                                 key={table_name}
                                 last_db_change={this.state.last_db_change}
                                 onDataChange={this.onDataChange}

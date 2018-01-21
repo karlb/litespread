@@ -113,6 +113,7 @@ function importDocument(db) {
             position int,
             format text,
             summary text,
+            formula text,
             description text
         );
     `);

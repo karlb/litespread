@@ -39,31 +39,25 @@ class SpreadTable extends React.Component {
     }
 
     updateFromDb(db) {
-        const result = db.exec(`SELECT * FROM ${this.props.table_name}_formatted`);
+        const result = db.exec(`SELECT * FROM ${this.props.tableName}_formatted`);
         const rows = result[0].values;
 
         this.setState({
             rows: rows,
-            table: ls.getTableDesc(db, this.props.table_name),
+            table: ls.getTableDesc(db, this.props.tableName),
         });
     }
 
     onCellChange = (value, rowIndex, colIndex) => {
         let row = this.state.rows[rowIndex];
         let sql = `
-                UPDATE ${this.props.table_name}
+                UPDATE ${this.props.tableName}
                 SET ${this.state.table.columns[colIndex].name} = '${value}'
                 WHERE _rowid_ = ${row[0]}
         `;
         this.props.db.exec(sql);
         this.props.onDataChange();
     };
-
-    onFormulaChange = (formula, colIndex) => {
-        let updateDesc = {columns: {}};
-        updateDesc.columns[colIndex] = {formula: {$set: formula}};
-        this.props.onSchemaChange(update(this.props.table, updateDesc));
-    }
 
     changeColumnName = (colIndex, newName) => {
         ls.changeColumnName(this.props.db, this.state.table, colIndex, newName);
@@ -80,33 +74,37 @@ class SpreadTable extends React.Component {
     }
 
     addColumn = () => {
-        ls.addColumn(this.props.db, this.props.table_name, 'new_col')
+        ls.addColumn(this.props.db, this.props.tableName, 'new_col')
         this.props.onSchemaChange();
     }
 
+
+    setColAttr = (column, attr, value) => {
+        this.props.db.changeRows(`
+                UPDATE litespread_column SET ${attr} = ?
+                WHERE table_name = ?
+                  AND name = ?
+            `, [value, this.props.tableName, column.name], 1)
+        this.props.onSchemaChange();
+    }
+
+
     renderHeaderMenu = (tableName, column) => {
-        const setCol = (col, fmt) => {
-            this.props.db.changeRows(`
-                    UPDATE litespread_column SET ${col} = ?
-                    WHERE table_name = ?
-                      AND name = ?
-                `, [fmt, tableName, column.name], 1)
-            this.props.onSchemaChange();
-        }
+        const setCol = (attr, val) => this.setColAttr(column, attr, val);
         return (
             <Menu>
                 <MenuItem iconName="asterisk" text="Change Format">
-                    <MenuItem iconName="blank" text="Generic" onClick={() => setCol('format', null)}/>
-                    <MenuItem iconName="dollar" text="Money" onClick={() => setCol('format', 'money')}/>
+                    <MenuItem iconName="blank" text="Generic" onClick={() => setCol('format', null)} />
+                    <MenuItem iconName="dollar" text="Money" onClick={() => setCol('format', 'money')} />
                 </MenuItem>
                 <MenuItem iconName="widget-footer" text="Change Summary">
-                    <MenuItem iconName="blank" text="None" onClick={() => setCol('summary', null)}/>
-                    <MenuItem iconName="add" text="Sum" onClick={() => setCol('summary', 'sum')}/>
-                    <MenuItem iconName="layout-linear" text="Average" onClick={() => setCol('summary', 'avg')}/>
+                    <MenuItem iconName="blank" text="None" onClick={() => setCol('summary', null)} />
+                    <MenuItem iconName="add" text="Sum" onClick={() => setCol('summary', 'sum')} />
+                    <MenuItem iconName="layout-linear" text="Average" onClick={() => setCol('summary', 'avg')} />
                 </MenuItem>
                 <MenuItem iconName="asterisk" text="Change Column Type">
                     <MenuItem iconName="asterisk" text="Generic" />
-                    <MenuItem iconName="function" text="Formula" />
+                    <MenuItem iconName="function" text="Formula" onClick={() => setCol('formula', '1')} />
                 </MenuItem>
                 <MenuItem iconName="function" text="Change Formula" />
                 <MenuItem iconName="wrench" text="Rename Column" />
@@ -162,6 +160,10 @@ class SpreadTable extends React.Component {
 
     columnHeaderCellRenderer = (colIndex) => {
         const col = this.state.table.columns[colIndex];
+        const onFormulaChange = (col, formula) => {
+            this.setColAttr(col, 'formula', formula);
+            this.props.onSchemaChange();
+        }
         return (
             <ColumnHeaderCell
                 name={this.state.table.columns[colIndex].name}
@@ -170,7 +172,7 @@ class SpreadTable extends React.Component {
             >
                 {col.formula && <EditableText
                     defaultValue={col.formula}
-                    onConfirm={(newFormula) => this.onFormulaChange(newFormula, colIndex)}
+                    onConfirm={(newFormula) => onFormulaChange(col, newFormula)}
                 />}
             </ColumnHeaderCell>
         );
