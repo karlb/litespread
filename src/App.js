@@ -4,7 +4,7 @@ import { updateDocument, importDocument } from './backend/litespread.js'
 import SQL from 'sql.js'
 import SpreadTable from './SpreadTable.js'
 import { EditableText, Tab, Tabs, FocusStyleManager, Navbar, NavbarGroup,
-    NavbarHeading, NavbarDivider, Button, IconClasses
+    NavbarHeading, NavbarDivider, Button
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import "@blueprintjs/icons/lib/css/blueprint-icons.css";
@@ -111,6 +111,13 @@ class App extends Component {
     }
 
     receiveDb = (db) => {
+        db.changeRows = (sqlStmt, params, expectedChanges) => {
+            const changes = db.run(sqlStmt, params).getRowsModified();
+            console.assert(changes === expectedChanges,
+                    'Got %i changes instead of %i in statement %s with params %s',
+                    changes, expectedChanges, sqlStmt, params);
+        }
+
         const tables = db.exec("SELECT table_name FROM litespread_table")[0]
             .values.map(row => row[0]);
         window.db = db;  // for debugging

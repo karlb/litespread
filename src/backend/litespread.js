@@ -45,7 +45,7 @@ function make_raw_view(db, table) {
 
 
 function format_col(col, select) {
-    var formatter = formatters[col.formatter] || (x => x);
+    var formatter = formatters[col.format] || (x => x);
     return formatter(select || col.name) + ' AS ' + col.name;
 }
 
@@ -111,7 +111,7 @@ function importDocument(db) {
             table_name text,
             name text,
             position int,
-            formatter text,
+            format text,
             summary text,
             description text
         );

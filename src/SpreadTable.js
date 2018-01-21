@@ -1,7 +1,7 @@
 import React from 'react';
 import update from 'immutability-helper';
 import { Table, Column, EditableCell, Cell, ColumnHeaderCell, EditableName } from "@blueprintjs/table";
-import { Button, Intent, EditableText } from "@blueprintjs/core";
+import { Button, Intent, EditableText, Menu, MenuItem } from "@blueprintjs/core";
 import * as ls from './backend/litespread.js'
 import "@blueprintjs/table/lib/css/table.css";
 
@@ -84,6 +84,38 @@ class SpreadTable extends React.Component {
         this.props.onSchemaChange();
     }
 
+    renderHeaderMenu = (tableName, column) => {
+        const setCol = (col, fmt) => {
+            this.props.db.changeRows(`
+                    UPDATE litespread_column SET ${col} = ?
+                    WHERE table_name = ?
+                      AND name = ?
+                `, [fmt, tableName, column.name], 1)
+            this.props.onSchemaChange();
+        }
+        return (
+            <Menu>
+                <MenuItem iconName="asterisk" text="Change Format">
+                    <MenuItem iconName="blank" text="Generic" onClick={() => setCol('format', null)}/>
+                    <MenuItem iconName="dollar" text="Money" onClick={() => setCol('format', 'money')}/>
+                </MenuItem>
+                <MenuItem iconName="widget-footer" text="Change Summary">
+                    <MenuItem iconName="blank" text="None" onClick={() => setCol('summary', null)}/>
+                    <MenuItem iconName="add" text="Sum" onClick={() => setCol('summary', 'sum')}/>
+                    <MenuItem iconName="layout-linear" text="Average" onClick={() => setCol('summary', 'avg')}/>
+                </MenuItem>
+                <MenuItem iconName="asterisk" text="Change Column Type">
+                    <MenuItem iconName="asterisk" text="Generic" />
+                    <MenuItem iconName="function" text="Formula" />
+                </MenuItem>
+                <MenuItem iconName="function" text="Change Formula" />
+                <MenuItem iconName="wrench" text="Rename Column" />
+                <MenuItem iconName="sort-asc" text="Sort Asc" />
+                <MenuItem iconName="sort-desc" text="Sort Desc" />
+            </Menu>
+        );
+    }
+
     render() {
         if (this.props.db === null) {
             return null;
@@ -98,7 +130,7 @@ class SpreadTable extends React.Component {
                 </div>
                 <Table
                     numRows={this.state.rows.length}
-                    enableColumnInteractionBar={true}
+                    //enableColumnInteractionBar={true}
                 >
                     {this.state.table.columns.map((col, colIndex) => (
                         <Column
@@ -129,15 +161,15 @@ class SpreadTable extends React.Component {
     }
 
     columnHeaderCellRenderer = (colIndex) => {
-        let formula = this.state.table.columns[colIndex].formula;
+        const col = this.state.table.columns[colIndex];
         return (
             <ColumnHeaderCell
                 name={this.state.table.columns[colIndex].name}
+                menuRenderer={() => this.renderHeaderMenu(this.state.table.name, col)}
                 nameRenderer={this.nameRenderer}
-                index={colIndex}
             >
-                {formula && <EditableText
-                    defaultValue={formula}
+                {col.formula && <EditableText
+                    defaultValue={col.formula}
                     onConfirm={(newFormula) => this.onFormulaChange(newFormula, colIndex)}
                 />}
             </ColumnHeaderCell>
