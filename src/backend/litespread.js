@@ -1,4 +1,3 @@
-'use strict';
 // var sql = require('sql.js');
 // var parser = require('./libs/sqlite-parser.js');
 
@@ -98,7 +97,7 @@ function importDocument(db) {
     `);
     db.run(`
         CREATE TABLE IF NOT EXISTS litespread_table (
-            table_name text,
+            table_name text NOT NULL PRIMARY KEY,
             description text
         );
         INSERT INTO litespread_table(table_name)
@@ -108,13 +107,14 @@ function importDocument(db) {
     `);
     db.run(`
         CREATE TABLE IF NOT EXISTS litespread_column (
-            table_name text,
-            name text,
-            position int,
+            table_name text NOT NULL,
+            name text NOT NULL,
+            position int NOT NULL,
             format text,
             summary text,
             formula text,
-            description text
+            description text,
+            PRIMARY KEY (table_name, position)
         );
     `);
     var col_insert = db.prepare(`
