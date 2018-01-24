@@ -4,106 +4,73 @@ import { updateDocument, importDocument } from './backend/litespread.js'
 import SQL from 'sql.js'
 import SpreadTable from './SpreadTable.js'
 import { EditableText, Tab, Tabs, FocusStyleManager, Navbar, NavbarGroup,
-    NavbarHeading, NavbarDivider, Button
+    NavbarHeading, NavbarDivider, Button, Menu, MenuItem, Popover, Position,
+    FileInput
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import RemoteStorage from 'remotestoragejs';
 import Widget from 'remotestorage-widget';
-
-let doc = {
-    'tables': [
-        {
-            'name': 'inventory',
-            'columns': [
-                {
-                    'name': 'name',
-                    'position': 0,
-                },
-                {
-                    'name': 'qty',
-                    'position': 1,
-                    'summary': 'sum',
-                },
-                {
-                    'name': 'price',
-                    'position': 2,
-                    'formatter': 'money',
-                    'summary': 'avg',
-                },
-                {
-                    'name': 'total_price',
-                    'position': 3,
-                    'formula': 'qty * price',
-                    'formatter': 'money',
-                    'summary': 'sum',
-                },
-            ],
-        },
-        /*{
-            'name': 'joined_table',
-            'from': 'inventory JOIN sales USING (name)',
-            'columns': [
-                {
-                    'name': 'name',
-                    'position': 0,
-                },
-                {
-                    'name': 'shop',
-                    'position': 1,
-                },
-                {
-                    'name': 'price',
-                    'position': 2,
-                    'formatter': 'money',
-                    'summary': 'avg',
-                },
-                {
-                    'name': 'revenue',
-                    'position': 2,
-                    'formula': 'price * units_sold',
-                    'formatter': 'money',
-                    'summary': 'avg',
-                }
-            ],
-        },*/
-    ],
-}
+import FileSaver from 'file-saver';
+import {
+  BrowserRouter as Router,
+  Route,
+  Link
+} from 'react-router-dom'
 
 
+const MIME_TYPE = 'application/x-sqlite3'
 
 
-class App extends Component {
+class ShowFile extends Component {
 
     constructor(props, context) {
         super(props, context);
+
+        // set up remotestorage
+        let remoteClient;
+        if (this.props.match.params.location !== 'local') {
+            const remoteDir = 'litespread'
+            const remoteStorage = new RemoteStorage();
+            remoteStorage.access.claim(remoteDir, 'rw');
+            remoteStorage.caching.enable('/' + remoteDir +'/')
+            remoteClient = remoteStorage.scope('/' + remoteDir +'/');
+            window.remoteClient = remoteClient;
+
+            const widget = new Widget(remoteStorage);
+            widget.attach();
+        }
+
         this.state = {
             db: null,
             last_db_change: null,
             tables: [],
+            remoteStorage: remoteClient,
         }
+    }
+
+    get filename() {
+        return this.props.match.params.filename;
     }
 
     componentDidMount() {
         const self = this;
-        const fromRemote = false;
-        if (fromRemote) {
-            remoteClient.getFile('test.sqlite').then(file => {
-                file.data
+        if (this.state.remoteClient) {
+            this.state.remoteClient.getFile(this.filename).then(file => {
                 let uInt8Array = new Uint8Array(file.data);
                 let db = new SQL.Database(uInt8Array);
-                updateDocument(db, doc);
-                self.setState({db: db, last_db_change:new Date()});
+                updateDocument(db);
+                self.receiveDb(db);
             });
         } else {
             let xhr = new XMLHttpRequest();
-            xhr.open('GET', '/test.sqlite3', true);
+            xhr.open('GET', '/' + this.filename, true);
             xhr.responseType = 'arraybuffer';
             xhr.onload = function(e) {
                 let uInt8Array = new Uint8Array(this.response);
                 let db = new SQL.Database(uInt8Array);
                 importDocument(db);
-                updateDocument(db, doc);
+                updateDocument(db);
                 self.receiveDb(db);
             };
             xhr.send();
@@ -129,17 +96,62 @@ class App extends Component {
         });
     }
 
+    save = () => {
+        if (!this.state.remoteClient) {
+            return;
+        }
+        this.state.remoteClient.storeFile(
+                MIME_TYPE,
+                this.filename,
+                this.state.db.export().buffer);
+    }
+
     onDataChange = () => {
         this.setState({last_db_change: new Date()});
-        remoteClient.storeFile('application/x-sqlite3', 'test.sqlite', this.state.db.export().buffer)
+        this.save();
     }
 
     onSchemaChange = () => {
         updateDocument(this.state.db);
         this.setState({last_db_change: new Date()});
+        this.save();
+    }
+
+    uploadFile = (event) => {
+        console.log('upload started', event);
+        const f = event.target.files[0];
+        const r = new FileReader();
+        const self = this;
+        r.onload = function() {
+            console.log('upload received')
+            const Uints = new Uint8Array(r.result);
+            const db = new SQL.Database(Uints);
+            importDocument(db);
+            updateDocument(db);
+            self.receiveDb(db);
+        }
+        r.readAsArrayBuffer(f);
+        event.target.value = null;
+    }
+
+    saveFile = () => {
+        const blob = new Blob([this.state.db.export()], {type: MIME_TYPE});
+        FileSaver.saveAs(blob, this.filename);
     }
 
     render() {
+        const fileMenu = (
+            <Menu>
+                <input type="file" style={{display: ''}} id="inputfile" onChange={this.uploadFile} value=""/>
+                <MenuItem iconName="document-open" text="Load from Disk" onClick={() => document.getElementById('inputfile').click()}/>
+                <MenuItem iconName="download" text="Save to Disk" onClick={this.saveFile}/>
+                <MenuItem iconName="folder-open" text="Synced Files">
+                    <MenuItem iconName="blank" text="..." />
+                </MenuItem>
+            </Menu>
+        );
+
+
         return (
             <div className="App">
                 <Navbar>
@@ -148,7 +160,9 @@ class App extends Component {
                     </NavbarGroup>
                     <NavbarGroup align="right">
                         <Button className="pt-minimal" iconName="home">Home</Button>
-                        <Button className="pt-minimal" iconName="document">Files</Button>
+                        <Popover content={fileMenu} position={Position.BOTTOM}>
+                            <Button className="pt-minimal" iconName="document">Files</Button>
+                        </Popover>
                         <NavbarDivider />
                         <Button className="pt-minimal" iconName="user"></Button>
                         <Button className="pt-minimal" iconName="notifications"></Button>
@@ -182,16 +196,25 @@ class App extends Component {
     }
 }
 
-const remoteDir = 'litespread'
-const remoteStorage = new RemoteStorage();
-remoteStorage.access.claim(remoteDir, 'rw');
-remoteStorage.caching.enable('/' + remoteDir +'/')
-const remoteClient = remoteStorage.scope('/' + remoteDir +'/');
-window.remoteClient = remoteClient;
-
-const widget = new Widget(remoteStorage);
-widget.attach();
 
 FocusStyleManager.onlyShowFocusOnTabs();
 
-export default App;
+const AppRouting = () => (
+  <Router>
+    <div>
+      {/*
+      <ul>
+        <li><Link to="/files">Files</Link></li>
+        <li><Link to="/files/test.sqlite">test.sqlite</Link></li>
+      </ul>
+
+      <hr/>
+
+      <Route exact path="/" component={ShowFile}/>
+      */}
+      <Route path="/:location(files|local)/:filename" component={ShowFile}/>
+    </div>
+  </Router>
+)
+
+export default AppRouting;
