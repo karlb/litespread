@@ -45,7 +45,7 @@ class ShowFile extends Component {
             db: null,
             last_db_change: null,
             tables: [],
-            remoteStorage: remoteClient,
+            remoteClient: remoteClient,
         }
     }
 
@@ -97,6 +97,7 @@ class ShowFile extends Component {
     }
 
     save = () => {
+        console.log('save called', this.state.remoteClient);
         if (!this.state.remoteClient) {
             return;
         }
@@ -104,6 +105,7 @@ class ShowFile extends Component {
                 MIME_TYPE,
                 this.filename,
                 this.state.db.export().buffer);
+        console.log('saved!');
     }
 
     onDataChange = () => {
