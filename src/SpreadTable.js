@@ -73,6 +73,15 @@ class SpreadTable extends React.Component {
         }
     }
 
+    addRow = () => {
+        let sql = `
+                INSERT INTO ${this.props.tableName}(${this.state.table.columns[0].name})
+                VALUES (null);
+        `;
+        this.props.db.exec(sql);
+        this.props.onDataChange();
+    }
+
     addColumn = () => {
         ls.addColumn(this.props.db, this.props.tableName, 'new_col')
         this.props.onSchemaChange();
@@ -152,7 +161,8 @@ class SpreadTable extends React.Component {
                   <a className="pt-button pt-icon-function" tabIndex="0" role="button"
                     onClick={this.addFormulaColumn}
                   >Add Formula Column</a>
-                  <a className="pt-button pt-icon-add-row-bottom" tabIndex="0" role="button">Add Row</a>
+                  <a className="pt-button pt-icon-add-row-bottom" tabIndex="0" role="button"
+                    onClick={this.addRow}>Add Row</a>
                 </div>
                 <Table
                     numRows={this.state.rows.length}

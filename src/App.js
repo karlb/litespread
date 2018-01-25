@@ -97,7 +97,6 @@ class ShowFile extends Component {
     }
 
     save = () => {
-        console.log('save called', this.state.remoteClient);
         if (!this.state.remoteClient) {
             return;
         }
