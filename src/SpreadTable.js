@@ -173,13 +173,37 @@ class SpreadTable extends React.Component {
 
     cellRenderer = (rowIndex, colIndex) => {
         let col = this.state.table.columns[colIndex];
-        return (
-            <EditableCell
-                onConfirm={(value) => this.onCellChange(value, rowIndex, colIndex)}
-                className={'text-' + formatter_alignment[col.formatter || 'undefined']}
-                value={this.state.rows[rowIndex][colIndex + 1]}
-            />
-        );
+        let classNames = {
+            'no-edit': col.formula,
+        };
+        const align = formatter_alignment[col.format || 'undefined'];
+        classNames[('text-' + align)] = true;
+        const value = this.state.rows[rowIndex][colIndex + 1];
+        if (this.state.table.hasFooter && rowIndex === this.state.rows.length - 1) {
+            classNames['footer'] = true;
+            if (col.summary) {
+                const summary = <span className="summary">({col.summary})</span>;
+                if (align === 'left') {
+                    return <Cell className={classNames}>{value} {summary}</Cell>
+                } else {
+                    return <Cell className={classNames}>{summary} {value}</Cell>
+                }
+            } else {
+                return <Cell className={classNames} />
+            }
+        } else if (col.formula) {
+            return (
+                <Cell className={classNames}>{value}</Cell>
+            );
+        } else {
+            return (
+                <EditableCell
+                    onConfirm={(value) => this.onCellChange(value, rowIndex, colIndex)}
+                    className={classNames}
+                    value={value}
+                />
+            );
+        }
     }
 
     nameRenderer = (name, colIndex) => {
@@ -198,10 +222,14 @@ class SpreadTable extends React.Component {
                 menuRenderer={() => this.renderHeaderMenu(this.state.table.name, col)}
                 nameRenderer={this.nameRenderer}
             >
-                {col.formula && <EditableText
-                    defaultValue={col.formula}
-                    onConfirm={(newFormula) => onFormulaChange(col, newFormula)}
-                />}
+                {col.formula && (
+                    <div className="formula">=&nbsp;
+                        <EditableText
+                            defaultValue={col.formula}
+                            onConfirm={(newFormula) => onFormulaChange(col, newFormula)}
+                        />
+                    </div>
+                )}
             </ColumnHeaderCell>
         );
     }

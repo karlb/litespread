@@ -86,6 +86,9 @@ function updateDocument(db) {
 
 
 function importDocument(db) {
+    if (db.exec("SELECT * FROM sqlite_master WHERE name = 'litespread_document'")[0].values) {
+        return;
+    }
     db.run(`
         CREATE TABLE IF NOT EXISTS litespread_document (
             api_version int NOT NULL,
@@ -159,6 +162,7 @@ function getTableDesc(db, table_name) {
     return {
         name: table_name,
         columns: columns,
+        hasFooter: columns.some(c => c.summary),
     }
 }
 
