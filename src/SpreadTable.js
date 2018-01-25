@@ -166,7 +166,11 @@ class SpreadTable extends React.Component {
                 </div>
                 <Table
                     numRows={this.state.rows.length}
-                    //enableColumnInteractionBar={true}
+                    /*enableColumnReordering={true}
+                    onColumnsReordered={(oldIndex, newIndex, length) => console.log(oldIndex, newIndex, length)}
+                    enableColumnInteractionBar={true}*/
+                    enableFocusedCell={true}
+                    enableMultipleSelection={false}
                 >
                     {this.state.table.columns.map((col, colIndex) => (
                         <Column
