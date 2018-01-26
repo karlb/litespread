@@ -1,19 +1,11 @@
 import React from 'react';
-import update from 'immutability-helper';
-import { Table, Column, EditableCell, Cell, ColumnHeaderCell, EditableName } from "@blueprintjs/table";
-import { Button, Intent, EditableText, Menu, MenuItem } from "@blueprintjs/core";
+import {
+    Table, Column, EditableCell, Cell, ColumnHeaderCell, EditableName,
+    TableLoadingOption
+} from "@blueprintjs/table";
+import { EditableText, Menu, MenuItem, Callout } from "@blueprintjs/core";
 import * as ls from './backend/litespread.js'
 import "@blueprintjs/table/lib/css/table.css";
-
-function entries(obj) {
-    let ownProps = Object.keys(obj),
-    i = ownProps.length,
-    resArray = new Array(i);  // preallocate the Array
-    while (i--)
-        resArray[i] = [ownProps[i], obj[ownProps[i]]];
-
-    return resArray;
-};
 
 
 let formatter_alignment = {
@@ -39,12 +31,24 @@ class SpreadTable extends React.Component {
     }
 
     updateFromDb(db) {
-        const result = db.exec(`SELECT * FROM ${this.props.tableName}_formatted`);
+        let result;
+        try {
+            result = db.exec(`SELECT * FROM ${this.props.tableName}_formatted`);
+        }
+        catch (e) {
+            this.setState({
+                loadingOptions: [TableLoadingOption.CELLS],
+                loadingError: e.toString(),
+            });
+            return;
+        }
         const rows = result[0].values;
 
         this.setState({
             rows: rows,
             table: ls.getTableDesc(db, this.props.tableName),
+            loadingOptions: [],
+            loadingError: null,
         });
     }
 
@@ -171,6 +175,8 @@ class SpreadTable extends React.Component {
                     enableColumnInteractionBar={true}*/
                     enableFocusedCell={true}
                     enableMultipleSelection={false}
+                    loadingOptions={this.state.loadingOptions}
+                    style={{position: 'absolute'}}
                 >
                     {this.state.table.columns.map((col, colIndex) => (
                         <Column
@@ -181,6 +187,7 @@ class SpreadTable extends React.Component {
                         />
                     ))}
                 </Table>
+                {this.state.loadingError && <Callout className="pt-intent-danger">{this.state.loadingError}</Callout>}
             </div>
         );
     }
