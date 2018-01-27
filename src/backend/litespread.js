@@ -1,9 +1,5 @@
-// var sql = require('sql.js');
-// var parser = require('./libs/sqlite-parser.js');
-
-// var query = 'select pants from laundry;';
-// var ast = parser(query);
-// console.log(ast);
+var squel = require('squel');
+var helper = require('./litespread_helper.js');
 
 var formatters = {
   money: x => `printf("%.2f", ${x})`
@@ -15,27 +11,63 @@ var summaries = {
   avg: x => `avg(${x})`
 };
 
-function make_col(col) {
-  var select = col.formula || col.name;
-  return `${select} AS ${col.name}`;
-}
-
 function make_raw_view(db, table) {
-  var from_clause, rowid;
+  let s = squel.select();
   if (table.from) {
-    from_clause = table.from;
-    rowid = 'null AS rowid';
+    s.from(table.from);
+    s.field('null', 'rowid');
   } else {
-    from_clause = table.name;
-    rowid = 'rowid';
+    s.from(table.name);
+    s.field('rowid');
   }
-  var select = table.columns.map(make_col).join(', ');
-  // console.log(select);
+
+  // calculate col depencencies
+  table.columns.forEach(col => {
+    if (col.formula) {
+      col.deps = new Set(helper.findCols(col.formula));
+    } else {
+      col.deps = new Set();
+    }
+  });
+  // resolve dependencies
+  let availableCols = new Set(
+    table.columns.filter(c => !c.formula).map(c => c.name)
+  );
+  let todoCols = table.columns;
+  let iterations = 0;
+  while (todoCols.length) {
+    let nextTodoCols = [];
+    let nextAvailableCols = new Set();
+    todoCols.forEach(col => {
+      col.deps = col.deps.difference(availableCols);
+      if (col.deps.size === 0) {
+        s.field(col.formula || col.name, col.name);
+        nextAvailableCols.add(col.name);
+      } else {
+        nextTodoCols.push(col);
+      }
+    });
+
+    iterations++;
+    if (iterations > 100) {
+      throw Error(
+        'could not resolve dependencies for columns ' +
+          todoCols.map(c => c.name).join(', ')
+      );
+    }
+
+    todoCols = nextTodoCols;
+    availableCols = availableCols.union(nextAvailableCols);
+    s = squel
+      .select()
+      .from(s)
+      .field('*');
+  }
 
   db.run(`
         DROP VIEW IF EXISTS ${table.name}_raw;
         CREATE VIEW ${table.name}_raw AS
-        SELECT ${rowid}, ${select} FROM ${from_clause}
+        ${s.toString()}
     `);
 }
 
@@ -79,8 +111,9 @@ function updateDocument(db) {
 
 function importDocument(db) {
   if (
-    db.exec("SELECT * FROM sqlite_master WHERE name = 'litespread_document'")[0]
-      .values
+    db.exec(
+      "SELECT count(*) FROM sqlite_master WHERE name = 'litespread_document'"
+    )[0].values[0][0]
   ) {
     return;
   }
@@ -146,7 +179,6 @@ function changeColumnName(db, table, colIndex, newName, skipCommit) {
   db.exec(q);
   if (!skipCommit) {
     db.run('COMMIT');
-    console.log('commit', newName);
   }
 }
 
@@ -180,10 +212,28 @@ function addColumn(db, tableName, colName) {
     `);
 }
 
+function addFormulaColumn(db, tableName, colName, formula) {
+  db.run(
+    `
+      INSERT INTO litespread_column (table_name, name, formula, position)
+      VALUES (
+        :table_name, :col_name, :formula,
+        (SELECT max(position) + 1 FROM litespread_column WHERE table_name = :table_name)
+        )
+      `,
+    {
+      ':table_name': tableName,
+      ':col_name': colName,
+      ':formula': formula
+    }
+  );
+}
+
 export {
   updateDocument,
   importDocument,
   changeColumnName,
   getTableDesc,
-  addColumn
+  addColumn,
+  addFormulaColumn
 };
