@@ -39,6 +39,7 @@ function make_raw_view(db, table) {
     let nextTodoCols = [];
     let nextAvailableCols = new Set();
     todoCols.forEach(col => {
+      // eslint-disable-line no-loop-func
       col.deps = col.deps.difference(availableCols);
       if (col.deps.size === 0) {
         s.field(col.formula || col.name, col.name);
@@ -137,7 +138,8 @@ function importDocument(db) {
         INSERT INTO litespread_table(table_name)
         SELECT DISTINCT name
         FROM sqlite_master
-        WHERE type = 'table';
+        WHERE type = 'table'
+          AND name NOT LIKE 'litespread_%';
     `);
   db.run(`
         CREATE TABLE IF NOT EXISTS litespread_column (

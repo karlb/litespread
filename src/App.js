@@ -4,7 +4,6 @@ import { updateDocument, importDocument } from './backend/litespread.js';
 import SQL from 'sql.js';
 import SpreadTable from './SpreadTable.js';
 import {
-  EditableText,
   Tab,
   Tabs,
   FocusStyleManager,
@@ -16,15 +15,14 @@ import {
   Menu,
   MenuItem,
   Popover,
-  Position,
-  FileInput
+  Position
 } from '@blueprintjs/core';
 import '@blueprintjs/core/lib/css/blueprint.css';
 import '@blueprintjs/icons/lib/css/blueprint-icons.css';
 import RemoteStorage from 'remotestoragejs';
 import Widget from 'remotestorage-widget';
 import FileSaver from 'file-saver';
-import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Route } from 'react-router-dom';
 
 const MIME_TYPE = 'application/x-sqlite3';
 
