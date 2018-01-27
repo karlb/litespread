@@ -13,6 +13,7 @@
     "sql.js": "^0.5.0"
   },
   "scripts": {
+    "precommit": "lint-staged",
     "analyze": "source-map-explorer build/static/js/main.*",
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -25,6 +26,7 @@
     "@blueprintjs/table": "^2.0.0-beta.1",
     "es6-shim": "^0.35.3",
     "file-saver": "^1.3.3",
+    "prettier": "^1.10.2",
     "react-router-dom": "^4.2.2",
     "react-transition-group": "^2.2.1",
     "remotestorage-widget": "^1.3.0",

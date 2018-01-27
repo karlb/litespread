@@ -1,29 +1,29 @@
 .text-left {
-    text-align: left;
+  text-align: left;
 }
 .text-right {
-    text-align: right;
+  text-align: right;
 }
 
 .pt-table-column-name {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 .formula {
-    margin: -8px 4px 4px 9px;
-    color: #5c7080;  /* text-color-muted */
+  margin: -8px 4px 4px 9px;
+  color: #5c7080; /* text-color-muted */
 }
 
 .no-edit {
-    background-color: #F5F8FA;  /* light gray 5 */
+  background-color: #f5f8fa; /* light gray 5 */
 }
 
 .footer {
-    border-top: 1px solid #738694; /* gray 2 */
-    font-weight: bold;
-    background-color: #F5F8FA;  /* light gray 5 */
+  border-top: 1px solid #738694; /* gray 2 */
+  font-weight: bold;
+  background-color: #f5f8fa; /* light gray 5 */
 }
 .footer .summary {
-    color: #5c7080;  /* text-color-muted */
-    font-weight: normal;
+  color: #5c7080; /* text-color-muted */
+  font-weight: normal;
 }
