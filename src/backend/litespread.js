@@ -91,10 +91,13 @@ function make_formatted_view(db, table) {
         DROP VIEW IF EXISTS ${table.name}_formatted;
         CREATE VIEW ${table.name}_formatted AS
         SELECT rowid, ${select} FROM ${table.name}_raw
+    `;
+  if (table.hasFooter) {
+    script += `
         UNION ALL
         SELECT rowid, ${summary} FROM ${table.name}_raw
     `;
-  // console.log(script);
+  }
   db.run(script);
 }
 

@@ -95,7 +95,6 @@ class SpreadTable extends React.Component {
   };
 
   addFormulaColumn = () => {
-    console.log(this.props.tableName);
     this.props.db.changeRows(
       `
                 INSERT INTO litespread_column (table_name, name, formula, position)
