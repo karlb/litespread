@@ -38,8 +38,8 @@ function make_raw_view(db, table) {
   while (todoCols.length) {
     let nextTodoCols = [];
     let nextAvailableCols = new Set();
+    // eslint-disable-next-line no-loop-func
     todoCols.forEach(col => {
-      // eslint-disable-line no-loop-func
       col.deps = col.deps.difference(availableCols);
       if (col.deps.size === 0) {
         s.field(col.formula || col.name, col.name);

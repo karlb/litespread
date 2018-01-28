@@ -27,3 +27,18 @@
   color: #5c7080; /* text-color-muted */
   font-weight: normal;
 }
+
+.start-page {
+  margin: auto;
+  padding: 20px;
+  max-width: 1000px;
+}
+
+.big-actions {
+  display: flex;
+  margin: 0 -20px;
+}
+.big-actions .pt-card {
+  width: 50%;
+  margin: 20px;
+}

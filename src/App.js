@@ -15,40 +15,26 @@ import {
   Menu,
   MenuItem,
   Popover,
-  Position
+  Position,
+  Card,
+  NonIdealState
 } from '@blueprintjs/core';
 import '@blueprintjs/core/lib/css/blueprint.css';
 import '@blueprintjs/icons/lib/css/blueprint-icons.css';
 import RemoteStorage from 'remotestoragejs';
 import Widget from 'remotestorage-widget';
 import FileSaver from 'file-saver';
-import { BrowserRouter as Router, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
+import RemoteLitespread, { MIME_TYPE } from './RemoteFile.js';
 
-const MIME_TYPE = 'application/x-sqlite3';
-
-class ShowFile extends Component {
+class Document extends Component {
   constructor(props, context) {
     super(props, context);
-
-    // set up remotestorage
-    let remoteClient;
-    if (this.props.match.params.location !== 'local') {
-      const remoteDir = 'litespread';
-      const remoteStorage = new RemoteStorage();
-      remoteStorage.access.claim(remoteDir, 'rw');
-      remoteStorage.caching.enable('/' + remoteDir + '/');
-      remoteClient = remoteStorage.scope('/' + remoteDir + '/');
-      window.remoteClient = remoteClient;
-
-      const widget = new Widget(remoteStorage);
-      widget.attach();
-    }
 
     this.state = {
       db: null,
       last_db_change: null,
-      tables: [],
-      remoteClient: remoteClient
+      tables: []
     };
   }
 
@@ -58,29 +44,31 @@ class ShowFile extends Component {
 
   componentDidMount() {
     const self = this;
-    if (this.state.remoteClient) {
-      this.state.remoteClient.getFile(this.filename).then(file => {
-        let uInt8Array = new Uint8Array(file.data);
-        let db = new SQL.Database(uInt8Array);
-        updateDocument(db);
-        self.receiveDb(db);
-      });
+    if (this.props.match.params.location === 'files') {
+      remoteClient.getFile(this.filename).then(
+        file => {
+          self.receiveDb(file.data);
+        },
+        () => {
+          console.error('Could not load file from remote storage!');
+        }
+      );
     } else {
       let xhr = new XMLHttpRequest();
-      xhr.open('GET', '/' + this.filename, true);
+      xhr.open('GET', this.filename, true);
       xhr.responseType = 'arraybuffer';
       xhr.onload = function(e) {
-        let uInt8Array = new Uint8Array(this.response);
-        let db = new SQL.Database(uInt8Array);
-        importDocument(db);
-        updateDocument(db);
-        self.receiveDb(db);
+        self.receiveDb(this.response);
       };
       xhr.send();
     }
   }
 
-  receiveDb = db => {
+  receiveDb = db_data => {
+    const uInt8Array = new Uint8Array(db_data);
+    const db = new SQL.Database(uInt8Array);
+
+    // just a helper function
     db.changeRows = (sqlStmt, params, expectedChanges) => {
       const changes = db.run(sqlStmt, params).getRowsModified();
       console.assert(
@@ -92,6 +80,9 @@ class ShowFile extends Component {
         params
       );
     };
+
+    importDocument(db);
+    updateDocument(db);
 
     const tables = db
       .exec('SELECT table_name FROM litespread_table')[0]
@@ -114,7 +105,6 @@ class ShowFile extends Component {
       this.filename,
       this.state.db.export().buffer
     );
-    console.log('saved!');
   };
 
   onDataChange = () => {
@@ -128,29 +118,13 @@ class ShowFile extends Component {
     this.save();
   };
 
-  uploadFile = event => {
-    console.log('upload started', event);
-    const f = event.target.files[0];
-    const r = new FileReader();
-    const self = this;
-    r.onload = function() {
-      console.log('upload received');
-      const Uints = new Uint8Array(r.result);
-      const db = new SQL.Database(Uints);
-      importDocument(db);
-      updateDocument(db);
-      self.receiveDb(db);
-    };
-    r.readAsArrayBuffer(f);
-    event.target.value = null;
-  };
-
   saveFile = () => {
     const blob = new Blob([this.state.db.export()], { type: MIME_TYPE });
     FileSaver.saveAs(blob, this.filename);
   };
 
   render() {
+    /*
     const fileMenu = (
       <Menu>
         <input
@@ -175,28 +149,10 @@ class ShowFile extends Component {
         </MenuItem>
       </Menu>
     );
+    */
 
     return (
       <div className="App">
-        <Navbar>
-          <NavbarGroup>
-            <NavbarHeading>Litespread</NavbarHeading>
-          </NavbarGroup>
-          <NavbarGroup align="right">
-            <Button className="pt-minimal" iconName="home">
-              Home
-            </Button>
-            <Popover content={fileMenu} position={Position.BOTTOM}>
-              <Button className="pt-minimal" iconName="document">
-                Files
-              </Button>
-            </Popover>
-            <NavbarDivider />
-            <Button className="pt-minimal" iconName="user" />
-            <Button className="pt-minimal" iconName="notifications" />
-            <Button className="pt-minimal" iconName="cog" />
-          </NavbarGroup>
-        </Navbar>
         <Tabs
           id="TableTabs"
           defaultSelectedTabId="table-tab-0"
@@ -220,34 +176,146 @@ class ShowFile extends Component {
               }
             />
           ))}
-          {/*
-                    <Tabs.Expander />
-                    <input className="pt-input" type="text" placeholder="Search..." />
-                    */}
         </Tabs>
       </div>
     );
   }
 }
 
+class StartPage extends Component {
+  constructor(props, context) {
+    super(props, context);
+
+    // remotestorage widget
+    const widget = new Widget(remoteStorage);
+    widget.attach();
+
+    this.state = {
+      files: []
+    };
+
+    remoteClient.list().then(listing => {
+      this.setState({ files: Object.keys(listing) });
+    });
+  }
+
+  uploadFile = event => {
+    console.log('upload started', event);
+    const f = event.target.files[0];
+    const r = new FileReader();
+    const self = this;
+    const filename = document
+      .getElementById('inputfile')
+      .value.split(/[\\/]/)
+      .pop();
+    r.onload = function() {
+      remoteClient
+        .add(filename, r.result)
+        .then(() => self.props.history.push('/files/' + filename));
+    };
+    r.readAsArrayBuffer(f);
+    event.target.value = null;
+  };
+
+  render() {
+    return (
+      <div className="start-page">
+        <h1>Litespread Documents</h1>
+        <div className="big-actions">
+          <Card
+            interactive={true}
+            onClick={() => document.getElementById('inputfile').click()}
+          >
+            <input
+              type="file"
+              style={{ display: 'none' }}
+              id="inputfile"
+              onChange={this.uploadFile}
+              value=""
+            />
+            <NonIdealState
+              title="Create new File"
+              description="Start from scratch with an empty file."
+              visual="add"
+            />
+          </Card>
+          <Card interactive={true}>
+            <NonIdealState
+              title="Load from Disk"
+              description="Load file from disk and start editing."
+              visual="folder-open"
+            />
+          </Card>
+        </div>
+
+        <Card>
+          <h2>Your Files</h2>
+          {this.state.files.length ? (
+            <ul className="pt-list-unstyled">
+              {this.state.files.map(filename => (
+                <li key={filename}>
+                  <Link to={'files/' + filename}>{filename}</Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <NonIdealState
+              title="No Files found"
+              description="Apparently you didn't save any files in Litespread, yet. Please use on of the actions above to work with Litespread."
+              visual="document"
+            />
+          )}
+        </Card>
+      </div>
+    );
+  }
+}
+
+class App extends Component {
+  constructor(props, context) {
+    super(props, context);
+  }
+
+  render() {
+    return (
+      <Router>
+        <div>
+          <Navbar>
+            <NavbarGroup>
+              <NavbarHeading>Litespread</NavbarHeading>
+            </NavbarGroup>
+            <NavbarGroup align="right">
+              <Button className="pt-minimal" iconName="home">
+                Home
+              </Button>
+              {/*
+              <Popover content={fileMenu} position={Position.BOTTOM}>
+                <Button className="pt-minimal" iconName="document">
+                  Files
+                </Button>
+              </Popover>
+              */}
+              <NavbarDivider />
+              <Button className="pt-minimal" iconName="user" />
+              <Button className="pt-minimal" iconName="notifications" />
+              <Button className="pt-minimal" iconName="cog" />
+            </NavbarGroup>
+          </Navbar>
+          <Route exact path="/" component={StartPage} />
+          <Route
+            path="/:location(files|url)/:filename(.*)"
+            component={Document}
+          />
+        </div>
+      </Router>
+    );
+  }
+}
+
 FocusStyleManager.onlyShowFocusOnTabs();
 
-const AppRouting = () => (
-  <Router>
-    <div>
-      {/*
-      <ul>
-        <li><Link to="/files">Files</Link></li>
-        <li><Link to="/files/test.sqlite">test.sqlite</Link></li>
-      </ul>
+const remoteStorage = new RemoteStorage({ modules: [RemoteLitespread] });
+const remoteClient = remoteStorage.litespread;
+window.remoteClient = remoteClient; // for debugging
 
-      <hr/>
-
-      <Route exact path="/" component={ShowFile}/>
-      */}
-      <Route path="/:location(files|local)/:filename" component={ShowFile} />
-    </div>
-  </Router>
-);
-
-export default AppRouting;
+export default App;
