@@ -97,14 +97,9 @@ class Document extends Component {
   };
 
   save = () => {
-    if (!this.state.remoteClient) {
-      return;
+    if (this.props.match.params.location === 'files') {
+      remoteClient.save(this.filename, this.state.db.export().buffer);
     }
-    this.state.remoteClient.storeFile(
-      MIME_TYPE,
-      this.filename,
-      this.state.db.export().buffer
-    );
   };
 
   onDataChange = () => {
@@ -124,35 +119,9 @@ class Document extends Component {
   };
 
   render() {
-    /*
-    const fileMenu = (
-      <Menu>
-        <input
-          type="file"
-          style={{ display: '' }}
-          id="inputfile"
-          onChange={this.uploadFile}
-          value=""
-        />
-        <MenuItem
-          iconName="document-open"
-          text="Load from Disk"
-          onClick={() => document.getElementById('inputfile').click()}
-        />
-        <MenuItem
-          iconName="download"
-          text="Save to Disk"
-          onClick={this.saveFile}
-        />
-        <MenuItem iconName="folder-open" text="Synced Files">
-          <MenuItem iconName="blank" text="..." />
-        </MenuItem>
-      </Menu>
-    );
-    */
-
     return (
       <div className="App">
+        <MainNavbar doc={this} />
         <Tabs
           id="TableTabs"
           defaultSelectedTabId="table-tab-0"
@@ -219,88 +188,146 @@ class StartPage extends Component {
 
   render() {
     return (
-      <div className="start-page">
-        <h1>Litespread Documents</h1>
-        <div className="big-actions">
-          <Card
-            interactive={true}
-            onClick={() => document.getElementById('inputfile').click()}
-          >
-            <input
-              type="file"
-              style={{ display: 'none' }}
-              id="inputfile"
-              onChange={this.uploadFile}
-              value=""
-            />
-            <NonIdealState
-              title="Create new File"
-              description="Start from scratch with an empty file."
-              visual="add"
-            />
-          </Card>
-          <Card interactive={true}>
-            <NonIdealState
-              title="Load from Disk"
-              description="Load file from disk and start editing."
-              visual="folder-open"
-            />
+      <div>
+        <MainNavbar />
+        <div className="start-page">
+          <h1>Litespread Documents</h1>
+          <div className="big-actions">
+            <Card
+              interactive={true}
+              onClick={() => document.getElementById('inputfile').click()}
+            >
+              <input
+                type="file"
+                style={{ display: 'none' }}
+                id="inputfile"
+                onChange={this.uploadFile}
+                value=""
+              />
+              <NonIdealState
+                title="Create new File"
+                description="Start from scratch with an empty file."
+                visual="add"
+              />
+            </Card>
+            <Card interactive={true}>
+              <NonIdealState
+                title="Load from Disk"
+                description="Load file from disk and start editing."
+                visual="folder-open"
+              />
+            </Card>
+          </div>
+
+          <Card>
+            <h2>Your Files</h2>
+            {this.state.files.length ? (
+              <ul className="pt-list-unstyled">
+                {this.state.files.map(filename => (
+                  <li key={filename}>
+                    <Link to={'files/' + filename}>{filename}</Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <NonIdealState
+                title="No Files found"
+                description="Apparently you didn't save any files in Litespread, yet. Please use on of the actions above to work with Litespread."
+                visual="document"
+              />
+            )}
           </Card>
         </div>
-
-        <Card>
-          <h2>Your Files</h2>
-          {this.state.files.length ? (
-            <ul className="pt-list-unstyled">
-              {this.state.files.map(filename => (
-                <li key={filename}>
-                  <Link to={'files/' + filename}>{filename}</Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <NonIdealState
-              title="No Files found"
-              description="Apparently you didn't save any files in Litespread, yet. Please use on of the actions above to work with Litespread."
-              visual="document"
-            />
-          )}
-        </Card>
       </div>
     );
   }
 }
 
+const MainNavbar = props => {
+  let menus;
+  if (props.doc) {
+    const fileMenu = (
+      <Menu>
+        {/*
+        <input
+          type="file"
+          style={{ display: '' }}
+          id="inputfile"
+          onChange={this.props.doc.uploadFile}
+          value=""
+        />
+        <MenuItem
+          iconName="document-open"
+          text="Load from Disk"
+          onClick={() => document.getElementById('inputfile').click()}
+        />
+        */}
+        <MenuItem
+          iconName="download"
+          text="Save to Disk"
+          onClick={props.doc.saveFile}
+        />
+        <MenuItem iconName="folder-open" text="Synced Files">
+          <MenuItem iconName="blank" text="..." />
+        </MenuItem>
+      </Menu>
+    );
+
+    menus = (
+      <Popover content={fileMenu} position={Position.BOTTOM}>
+        <Button className="pt-minimal" iconName="document">
+          File
+        </Button>
+      </Popover>
+    );
+  }
+
+  return (
+    <Navbar>
+      <NavbarGroup>
+        <Link to="/">
+          <NavbarHeading>Litespread</NavbarHeading>
+        </Link>
+        {props.doc && props.doc.filename}
+      </NavbarGroup>
+      <NavbarGroup align="right">
+        <Button className="pt-minimal" iconName="home">
+          Home
+        </Button>
+        {menus}
+        <NavbarDivider />
+        <Button className="pt-minimal" iconName="user" />
+        <Button className="pt-minimal" iconName="notifications" />
+        <Button className="pt-minimal" iconName="cog" />
+      </NavbarGroup>
+    </Navbar>
+  );
+};
+
 class App extends Component {
   constructor(props, context) {
     super(props, context);
+
+    this.state = {};
+
+    remoteStorage.on('connected', () => {
+      const userAddress = remoteStorage.remote.userAddress;
+      console.debug(`${userAddress} connected their remote storage.`);
+    });
+
+    remoteStorage.on('network-offline', () => {
+      console.debug("We're offline now.");
+    });
+
+    remoteStorage.on('network-online', () => {
+      console.debug("Hooray, we're back online.");
+    });
   }
 
   render() {
     return (
       <Router>
         <div>
-          <Navbar>
-            <NavbarGroup>
-              <NavbarHeading>Litespread</NavbarHeading>
-            </NavbarGroup>
-            <NavbarGroup align="right">
-              <Button className="pt-minimal" iconName="home">
-                Home
-              </Button>
-              {/*
-              <Popover content={fileMenu} position={Position.BOTTOM}>
-                <Button className="pt-minimal" iconName="document">
-                  Files
-                </Button>
-              </Popover>
-              */}
-              <NavbarDivider />
-              <Button className="pt-minimal" iconName="user" />
-              <Button className="pt-minimal" iconName="notifications" />
-              <Button className="pt-minimal" iconName="cog" />
-            </NavbarGroup>
-          </Navbar>
           <Route exact path="/" component={StartPage} />
           <Route
             path="/:location(files|url)/:filename(.*)"
@@ -314,7 +341,12 @@ class App extends Component {
 
 FocusStyleManager.onlyShowFocusOnTabs();
 
-const remoteStorage = new RemoteStorage({ modules: [RemoteLitespread] });
+const remoteStorage = new RemoteStorage({
+  modules: [RemoteLitespread],
+  cache: true
+  //logging: true,
+});
+remoteStorage.access.claim('litespread', 'rw');
 const remoteClient = remoteStorage.litespread;
 window.remoteClient = remoteClient; // for debugging
 
