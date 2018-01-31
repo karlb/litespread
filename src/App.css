@@ -42,3 +42,12 @@
   width: 50%;
   margin: 20px;
 }
+
+.logo-and-text * {
+  display: inline-block;
+  vertical-align: middle;
+}
+.logo-and-text img {
+  height: 30px;
+  margin-right: 5px;
+}
