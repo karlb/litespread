@@ -234,9 +234,23 @@ function addFormulaColumn(db, tableName, colName, formula) {
   );
 }
 
+function importParsedJson(db, json, tableName) {
+  const fields = json.data.shift();
+  const cols = fields.join(', ');
+  db.run(`
+      CREATE TABLE "${tableName}" (${cols});
+  `);
+  const placeholders = fields.map(() => '?').join(', ');
+  const stmt = db.prepare(
+    `INSERT INTO "${tableName}" VALUES (${placeholders})`
+  );
+  json.data.forEach(row => stmt.run(row));
+}
+
 export {
   updateDocument,
   importDocument,
+  importParsedJson,
   changeColumnName,
   getTableDesc,
   addColumn,

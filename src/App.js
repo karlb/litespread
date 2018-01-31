@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
-import { updateDocument, importDocument } from './backend/litespread.js';
+import * as ls from './backend/litespread.js';
 import SQL from 'sql.js';
 import SpreadTable from './SpreadTable.js';
 import {
@@ -81,8 +81,8 @@ class Document extends Component {
       );
     };
 
-    importDocument(db);
-    updateDocument(db);
+    ls.importDocument(db);
+    ls.updateDocument(db);
 
     const tables = db
       .exec('SELECT table_name FROM litespread_table')[0]
@@ -108,7 +108,7 @@ class Document extends Component {
   };
 
   onSchemaChange = () => {
-    updateDocument(this.state.db);
+    ls.updateDocument(this.state.db);
     this.setState({ last_db_change: new Date() });
     this.save();
   };
@@ -175,7 +175,7 @@ class StartPage extends Component {
         INSERT INTO table1 (col1)
         VALUES (null), (null), (null);
     `);
-    importDocument(db);
+    ls.importDocument(db);
     const filename = 'new_file.sqlite3';
     remoteClient
       .add(filename, db.export().buffer)
@@ -190,12 +190,31 @@ class StartPage extends Component {
       .getElementById('inputfile')
       .value.split(/[\\/]/)
       .pop();
-    r.onload = function() {
+
+    const save_and_redirect = data => {
       remoteClient
-        .add(filename, r.result)
+        .add(filename, data)
         .then(() => self.props.history.push('/files/' + filename));
     };
-    r.readAsArrayBuffer(f);
+
+    if (filename.endsWith('.csv')) {
+      r.onload = function() {
+        import('papaparse').then(Papa => {
+          const json = Papa.parse(r.result, {});
+          console.log(json);
+          const db = new SQL.Database();
+          const tableName = filename
+            .replace(/\s+/g, '_')
+            .replace(/([a-zA-Z0-9_]+).*/, '$1');
+          ls.importParsedJson(db, json, tableName);
+          save_and_redirect(db.export().buffer);
+        });
+      };
+      r.readAsText(f);
+    } else {
+      r.onload = () => save_and_redirect(r.result);
+      r.readAsArrayBuffer(f);
+    }
     event.target.value = null;
   };
 
