@@ -43,7 +43,6 @@ class Document extends Component {
   }
 
   componentDidMount() {
-    console.log('componentDidMount Document', this, this.props);
     const self = this;
     if (this.props.match.params.location === 'files') {
       remoteClient.getFile(this.filename).then(
@@ -169,8 +168,21 @@ class StartPage extends Component {
     });
   }
 
+  newFile = event => {
+    const db = new SQL.Database();
+    db.run(`
+        CREATE TABLE table1 (col1, col2, col3);
+        INSERT INTO table1 (col1)
+        VALUES (null), (null), (null);
+    `);
+    importDocument(db);
+    const filename = 'new_file.sqlite3';
+    remoteClient
+      .add(filename, db.export().buffer)
+      .then(() => this.props.history.push('/files/' + filename));
+  };
+
   uploadFile = event => {
-    console.log('upload started', event);
     const f = event.target.files[0];
     const r = new FileReader();
     const self = this;
@@ -194,6 +206,13 @@ class StartPage extends Component {
         <div className="start-page">
           <h1>Litespread Documents</h1>
           <div className="big-actions">
+            <Card interactive={true} onClick={this.newFile}>
+              <NonIdealState
+                title="Create new File"
+                description="Start from scratch with an empty file."
+                visual="add"
+              />
+            </Card>
             <Card
               interactive={true}
               onClick={() => document.getElementById('inputfile').click()}
@@ -205,13 +224,6 @@ class StartPage extends Component {
                 onChange={this.uploadFile}
                 value=""
               />
-              <NonIdealState
-                title="Create new File"
-                description="Start from scratch with an empty file."
-                visual="add"
-              />
-            </Card>
-            <Card interactive={true}>
               <NonIdealState
                 title="Load from Disk"
                 description="Load file from disk and start editing."
@@ -286,7 +298,8 @@ const MainNavbar = props => {
   return (
     <Navbar>
       <NavbarGroup>
-        <Link to="/">
+        <Link to="/" className="logo-and-text">
+          <img src="/img/logo.svg" alt="" />
           <NavbarHeading>Litespread</NavbarHeading>
         </Link>
         {props.doc && props.doc.filename}
