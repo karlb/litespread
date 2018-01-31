@@ -43,6 +43,7 @@ class Document extends Component {
   }
 
   componentDidMount() {
+    console.log('componentDidMount Document', this, this.props);
     const self = this;
     if (this.props.match.params.location === 'files') {
       remoteClient.getFile(this.filename).then(
@@ -308,30 +309,56 @@ class App extends Component {
   constructor(props, context) {
     super(props, context);
 
-    this.state = {};
+    this.state = {
+      lastSync: null,
+      connectionState: null,
+      connectedAs: null
+    };
+  }
 
+  componentWillMount() {
+    // handle connectionState
     remoteStorage.on('connected', () => {
       const userAddress = remoteStorage.remote.userAddress;
-      console.debug(`${userAddress} connected their remote storage.`);
+      console.log(`${userAddress} connected their remote storage.`);
+      this.setState({
+        connectionState: 'connected',
+        connectedAs: userAddress
+      });
     });
-
     remoteStorage.on('network-offline', () => {
-      console.debug("We're offline now.");
+      this.setState({ connectionState: 'offline' });
+    });
+    remoteStorage.on('network-online', () => {
+      this.setState({ connectionState: 'online' });
+    });
+    remoteStorage.on('not-connected', () => {
+      this.setState({ connectionState: 'not-connected' });
     });
 
-    remoteStorage.on('network-online', () => {
-      console.debug("Hooray, we're back online.");
+    // handle sync
+    remoteStorage.on('sync-done', () => {
+      this.setState({ lastSync: new Date() });
+    });
+
+    // handle error
+    remoteStorage.on('error', error => {
+      console.error('Remotestorage error:', error);
     });
   }
 
   render() {
+    const DocWithProps = props => {
+      return <Document {...props} lastSync={this.state.lastSync} />;
+    };
+
     return (
       <Router>
         <div>
           <Route exact path="/" component={StartPage} />
           <Route
             path="/:location(files|url)/:filename(.*)"
-            component={Document}
+            render={DocWithProps}
           />
         </div>
       </Router>
