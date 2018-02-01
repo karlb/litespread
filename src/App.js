@@ -386,13 +386,13 @@ class App extends Component {
 
     return (
       <Router>
-        <div>
+        <React.Fragment>
           <Route exact path="/" component={StartPage} />
           <Route
             path="/:location(files|url)/:filename(.*)"
             render={DocWithProps}
           />
-        </div>
+        </React.Fragment>
       </Router>
     );
   }

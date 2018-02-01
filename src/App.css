@@ -51,3 +51,26 @@
   height: 30px;
   margin-right: 5px;
 }
+
+html,
+body,
+#root,
+.App,
+.pt-tabs,
+.pt-tab-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+.pt-tabs {
+  display: flex;
+  flex-direction: row;
+}
+.pt-tab-list {
+  width: 10%;
+}
+.pt-tab-panel {
+  width: 90%;
+}

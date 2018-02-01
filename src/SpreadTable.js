@@ -191,7 +191,7 @@ class SpreadTable extends React.Component {
       return null;
     }
     return (
-      <div className="text-left">
+      <React.Fragment>
         <div className="pt-button-group">
           <a
             className="pt-button pt-icon-add-column-right"
@@ -226,7 +226,7 @@ class SpreadTable extends React.Component {
           enableFocusedCell={true}
           enableMultipleSelection={false}
           loadingOptions={this.state.loadingOptions}
-          style={{ position: 'absolute' }}
+          className="spreadtable"
         >
           {this.state.table.columns.map((col, colIndex) => (
             <Column
@@ -242,7 +242,7 @@ class SpreadTable extends React.Component {
             {this.state.loadingError}
           </Callout>
         )}
-      </div>
+      </React.Fragment>
     );
   }
 
