@@ -17,6 +17,11 @@ let formatter_alignment = {
   money: 'right'
 };
 
+let formatter_classes = {
+  undefined: '',
+  money: 'pt-monospace-text'
+};
+
 class SpreadTable extends React.Component {
   constructor(props, context) {
     super(props, context);
@@ -253,6 +258,7 @@ class SpreadTable extends React.Component {
     };
     const align = formatter_alignment[col.format || 'undefined'];
     classNames['text-' + align] = true;
+    classNames[formatter_classes[col.format || 'undefined']] = true;
     const value = this.state.rows[rowIndex][colIndex + 1];
     if (this.state.table.hasFooter && rowIndex === this.state.rows.length - 1) {
       classNames['footer'] = true;
