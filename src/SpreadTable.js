@@ -11,24 +11,7 @@ import {
 import { EditableText, Menu, MenuItem, Callout } from '@blueprintjs/core';
 import * as ls from './backend/litespread.js';
 import '@blueprintjs/table/lib/css/table.css';
-import * as moment from 'moment';
-
-let formatter_alignment = {
-  undefined: 'left',
-  number: 'right',
-  money: 'right'
-};
-
-let formatter_classes = {
-  undefined: '',
-  number: 'pt-monospace-text',
-  money: 'pt-monospace-text'
-};
-
-var validators = {
-  undefined: x => x,
-  date: x => moment.utc(x).toISOString()
-};
+import colTypes from './col-types.js';
 
 class SpreadTable extends React.Component {
   constructor(props, context) {
@@ -68,7 +51,7 @@ class SpreadTable extends React.Component {
 
   onCellChange = (value, rowIndex, colIndex) => {
     const col = this.state.table.columns[colIndex];
-    const validator = validators[col.format || 'undefined'];
+    const validator = colTypes[col.format || 'generic'].validator;
     value = validator(value);
     let row = this.state.rows[rowIndex];
     let sql = `
@@ -159,26 +142,14 @@ class SpreadTable extends React.Component {
     return (
       <Menu>
         <MenuItem iconName="percentage" text="Change Format">
-          <MenuItem
-            iconName="blank"
-            text="Generic"
-            onClick={() => setCol('format', null)}
-          />
-          <MenuItem
-            iconName="numerical"
-            text="Number"
-            onClick={() => setCol('format', 'number')}
-          />
-          <MenuItem
-            iconName="dollar"
-            text="Money"
-            onClick={() => setCol('format', 'money')}
-          />
-          <MenuItem
-            iconName="calendar"
-            text="Date"
-            onClick={() => setCol('format', 'date')}
-          />
+          {Object.entries(colTypes).map(([id, c]) => (
+            <MenuItem
+              iconName={c.icon}
+              text={c.name}
+              onClick={() => setCol('format', id)}
+              key={id}
+            />
+          ))}
         </MenuItem>
         <MenuItem iconName="widget-footer" text="Change Summary">
           <MenuItem
@@ -273,13 +244,14 @@ class SpreadTable extends React.Component {
   }
 
   cellRenderer = (rowIndex, colIndex) => {
-    let col = this.state.table.columns[colIndex];
+    const col = this.state.table.columns[colIndex];
+    const colType = colTypes[col.format] || 'generic';
+    const { align, className } = colType;
     let classNames = {
-      'no-edit': col.formula
+      'no-edit': col.formula,
+      ['text-' + align]: true,
+      [className]: true
     };
-    const align = formatter_alignment[col.format || 'undefined'];
-    classNames['text-' + align] = true;
-    classNames[formatter_classes[col.format || 'undefined']] = true;
     const value = this.state.rows[rowIndex][colIndex + 1];
     if (this.state.table.hasFooter && rowIndex === this.state.rows.length - 1) {
       classNames['footer'] = true;
