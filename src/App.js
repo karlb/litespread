@@ -27,6 +27,27 @@ import FileSaver from 'file-saver';
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 import RemoteLitespread, { MIME_TYPE } from './RemoteFile.js';
 
+function loadAsDb(dataPromise, filename) {
+  if (filename.endsWith('.csv')) {
+    return Promise.all([import('papaparse'), dataPromise]).then(
+      ([Papa, data]) => {
+        const json = Papa.parse(data, {});
+        const db = new SQL.Database();
+        const tableName = filename
+          .replace(/\s+/g, '_')
+          .replace(/([a-zA-Z0-9_]+).*/, '$1');
+        ls.importParsedJson(db, json, tableName);
+        return db;
+      }
+    );
+  } else {
+    return dataPromise.then(data => {
+      const uInt8Array = new Uint8Array(data);
+      return new SQL.Database(uInt8Array);
+    });
+  }
+}
+
 class Document extends Component {
   constructor(props, context) {
     super(props, context);
@@ -47,27 +68,28 @@ class Document extends Component {
     if (this.props.match.params.location === 'files') {
       remoteClient.getFile(this.filename).then(
         file => {
-          self.receiveDb(file.data);
+          const uInt8Array = new Uint8Array(file.data);
+          const db = new SQL.Database(uInt8Array);
+          self.receiveDb(db);
         },
         () => {
           console.error('Could not load file from remote storage!');
         }
       );
     } else {
-      let xhr = new XMLHttpRequest();
-      xhr.open('GET', this.filename, true);
-      xhr.responseType = 'arraybuffer';
-      xhr.onload = function(e) {
-        self.receiveDb(this.response);
-      };
-      xhr.send();
+      fetch(this.filename).then(result => {
+        if (this.filename.endsWith('.csv')) {
+          result = result.text();
+        } else {
+          result = result.arrayBuffer();
+        }
+        let filename = this.filename.split('/').pop();
+        loadAsDb(result, filename).then(this.receiveDb);
+      });
     }
   }
 
-  receiveDb = db_data => {
-    const uInt8Array = new Uint8Array(db_data);
-    const db = new SQL.Database(uInt8Array);
-
+  receiveDb = db => {
     // just a helper function
     db.changeRows = (sqlStmt, params, expectedChanges) => {
       const changes = db.run(sqlStmt, params).getRowsModified();
@@ -198,18 +220,10 @@ class StartPage extends Component {
     };
 
     if (filename.endsWith('.csv')) {
-      r.onload = function() {
-        import('papaparse').then(Papa => {
-          const json = Papa.parse(r.result, {});
-          console.log(json);
-          const db = new SQL.Database();
-          const tableName = filename
-            .replace(/\s+/g, '_')
-            .replace(/([a-zA-Z0-9_]+).*/, '$1');
-          ls.importParsedJson(db, json, tableName);
-          save_and_redirect(db.export().buffer);
-        });
-      };
+      r.onload = () =>
+        loadAsDb(r.result, filename).then(db =>
+          save_and_redirect(db.export().buffer)
+        );
       r.readAsText(f);
     } else {
       r.onload = () => save_and_redirect(r.result);
