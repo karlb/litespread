@@ -11,15 +11,23 @@ import {
 import { EditableText, Menu, MenuItem, Callout } from '@blueprintjs/core';
 import * as ls from './backend/litespread.js';
 import '@blueprintjs/table/lib/css/table.css';
+import * as moment from 'moment';
 
 let formatter_alignment = {
   undefined: 'left',
+  number: 'right',
   money: 'right'
 };
 
 let formatter_classes = {
   undefined: '',
+  number: 'pt-monospace-text',
   money: 'pt-monospace-text'
+};
+
+var validators = {
+  undefined: x => x,
+  date: x => moment.utc(x).toISOString()
 };
 
 class SpreadTable extends React.Component {
@@ -59,6 +67,9 @@ class SpreadTable extends React.Component {
   }
 
   onCellChange = (value, rowIndex, colIndex) => {
+    const col = this.state.table.columns[colIndex];
+    const validator = validators[col.format || 'undefined'];
+    value = validator(value);
     let row = this.state.rows[rowIndex];
     let sql = `
                 UPDATE ${this.props.tableName}
@@ -154,9 +165,19 @@ class SpreadTable extends React.Component {
             onClick={() => setCol('format', null)}
           />
           <MenuItem
+            iconName="numerical"
+            text="Number"
+            onClick={() => setCol('format', 'number')}
+          />
+          <MenuItem
             iconName="dollar"
             text="Money"
             onClick={() => setCol('format', 'money')}
+          />
+          <MenuItem
+            iconName="calendar"
+            text="Date"
+            onClick={() => setCol('format', 'date')}
           />
         </MenuItem>
         <MenuItem iconName="widget-footer" text="Change Summary">

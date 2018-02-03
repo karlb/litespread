@@ -26,6 +26,7 @@
     "@blueprintjs/table": "^2.0.0-beta.1",
     "es6-shim": "^0.35.3",
     "file-saver": "^1.3.3",
+    "moment": "^2.20.1",
     "papaparse": "^4.3.6",
     "prettier": "^1.10.2",
     "react-router-dom": "^4.2.2",

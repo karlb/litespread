@@ -2,7 +2,8 @@ var squel = require('squel');
 var helper = require('./litespread_helper.js');
 
 var formatters = {
-  money: x => `CASE WHEN ${x} IS NOT NULL THEN printf("%.2f", ${x}) END`
+  money: x => `CASE WHEN ${x} IS NOT NULL THEN printf("%.2f", ${x}) END`,
+  date: x => `CASE WHEN ${x} IS NOT NULL THEN date(${x}) END`
 };
 
 var summaries = {
