@@ -114,12 +114,30 @@ function updateDocument(db) {
   });
 }
 
+function upgradeDocument(db) {
+  const latest_version = 2;
+  const api_version = db.exec(
+      "SELECT api_version FROM litespread_document"
+      )[0].values[0][0];
+
+  if (api_version === latest_version) {
+    return;
+  } else if (api_version === 1) {
+    db.run('ALTER TABLE litespread_column ADD COLUMN width float');
+  }
+
+  // increase api_version and continue until we're at the latest version
+  db.run("UPDATE litespread_document SET api_version = ?", [api_version + 1]);
+  upgradeDocument(db);
+}
+
 function importDocument(db) {
   if (
     db.exec(
       "SELECT count(*) FROM sqlite_master WHERE name = 'litespread_document'"
     )[0].values[0][0]
   ) {
+    upgradeDocument(db);
     return;
   }
   db.run(`
@@ -151,6 +169,7 @@ function importDocument(db) {
             summary text,
             formula text,
             description text,
+            width float,
             PRIMARY KEY (table_name, position)
         );
     `);

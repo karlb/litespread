@@ -223,6 +223,8 @@ class SpreadTable extends React.Component {
           enableFocusedCell={true}
           enableMultipleSelection={false}
           loadingOptions={this.state.loadingOptions}
+          onColumnWidthChanged={(colIndex, width) => this.setColAttr(this.state.table.columns[colIndex], 'width', width)}
+          columnWidths={this.state.table.columns.map(c => c.width)}
           className="spreadtable"
         >
           {this.state.table.columns.map((col, colIndex) => (
