@@ -1,5 +1,6 @@
 import fs from 'fs';
 import sql from 'sql.js';
+import Papa from 'papaparse';
 import * as ls from './litespread.js';
 
 function createTestDB() {
@@ -79,6 +80,18 @@ it('addColumn', () => {
   expect(rows[2]).toEqual(['employed_since']);
 
   ls.updateDocument(db);
+});
+
+it('import1', () => {
+  const json = Papa.parse('src/backend/test-data/import1.csv', {});
+  const db = new SQL.Database();
+  ls.importParsedJson(db, json, 'import1');
+});
+
+it('import2', () => {
+  const json = Papa.parse('src/backend/test-data/import2.csv', {});
+  const db = new SQL.Database();
+  ls.importParsedJson(db, json, 'import2 test');
 });
 
 it('rename new column', () => {

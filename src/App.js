@@ -33,10 +33,7 @@ function loadAsDb(dataPromise, filename) {
       ([Papa, data]) => {
         const json = Papa.parse(data, {});
         const db = new SQL.Database();
-        const tableName = filename
-          .replace(/\s+/g, '_')
-          .replace(/([a-zA-Z0-9_]+).*/, '$1');
-        ls.importParsedJson(db, json, tableName);
+        ls.importParsedJson(db, json, filename);
         return db;
       }
     );

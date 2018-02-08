@@ -115,7 +115,7 @@ function updateDocument(db) {
 }
 
 function upgradeDocument(db) {
-  const latest_version = 2;
+  const latest_version = 3;
   const api_version = db.exec(
       "SELECT api_version FROM litespread_document"
       )[0].values[0][0];
@@ -123,6 +123,7 @@ function upgradeDocument(db) {
   if (api_version === latest_version) {
     return;
   } else if (api_version === 1) {
+  } else if (api_version === 2) {
     db.run('ALTER TABLE litespread_column ADD COLUMN width float');
   }
 
@@ -255,8 +256,9 @@ function addFormulaColumn(db, tableName, colName, formula) {
 }
 
 function importParsedJson(db, json, tableName) {
+  tableName = toSafeName(tableName);
   const fields = json.data.shift();
-  const cols = fields.join(', ');
+  const cols = fields.map(toSafeName).join(', ');
   db.run(`
       CREATE TABLE "${tableName}" (${cols});
   `);
@@ -265,6 +267,13 @@ function importParsedJson(db, json, tableName) {
     `INSERT INTO "${tableName}" VALUES (${placeholders})`
   );
   json.data.forEach(row => stmt.run(row));
+}
+
+
+function toSafeName(name) {
+  return name
+    .replace(/\s+/g, '_')
+    .replace(/([a-zA-Z0-9_]+).*/, '$1');
 }
 
 export {
