@@ -13,7 +13,7 @@ import * as ls from './backend/litespread.js';
 import '@blueprintjs/table/lib/css/table.css';
 import colTypes from './col-types.js';
 
-class SpreadTable extends React.Component {
+class SpreadTable extends React.PureComponent {
   constructor(props, context) {
     super(props, context);
     this.state = {

@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import './App.css';
 import * as ls from './backend/litespread.js';
 import SQL from 'sql.js';
@@ -46,7 +46,7 @@ function loadAsDb(dataPromise, filename) {
   }
 }
 
-class Document extends Component {
+class Document extends React.PureComponent {
   constructor(props, context) {
     super(props, context);
 
@@ -182,7 +182,7 @@ class Document extends Component {
   }
 }
 
-class StartPage extends Component {
+class StartPage extends React.Component {
   constructor(props, context) {
     super(props, context);
 
@@ -360,7 +360,7 @@ const MainNavbar = props => {
   );
 };
 
-class App extends Component {
+class App extends React.Component {
   constructor(props, context) {
     super(props, context);
 
