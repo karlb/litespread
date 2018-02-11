@@ -1,6 +1,8 @@
 var squel = require('squel');
 var helper = require('./litespread_helper.js');
 
+const LATEST_VERSION = 3;
+
 var formatters = {
   money: x => `CASE WHEN ${x} IS NOT NULL THEN printf("%.2f", ${x}) END`,
   date: x => `CASE WHEN ${x} IS NOT NULL THEN date(${x}) END`
@@ -115,12 +117,11 @@ function updateDocument(db) {
 }
 
 function upgradeDocument(db) {
-  const latest_version = 3;
   const api_version = db.exec(
       "SELECT api_version FROM litespread_document"
       )[0].values[0][0];
 
-  if (api_version === latest_version) {
+  if (api_version === LATEST_VERSION) {
     return;
   } else if (api_version === 1) {
   } else if (api_version === 2) {
@@ -129,6 +130,7 @@ function upgradeDocument(db) {
 
   // increase api_version and continue until we're at the latest version
   db.run("UPDATE litespread_document SET api_version = ?", [api_version + 1]);
+  console.log(api_version);
   upgradeDocument(db);
 }
 
@@ -148,8 +150,9 @@ function importDocument(db) {
             license text,
             description text
         );
-        INSERT INTO litespread_document(api_version) VALUES (1);
     `);
+  db.run("INSERT INTO litespread_document(api_version) VALUES (?)",
+      [LATEST_VERSION]);
   db.run(`
         CREATE TABLE IF NOT EXISTS litespread_table (
             table_name text NOT NULL PRIMARY KEY,
@@ -183,6 +186,12 @@ function importDocument(db) {
       col_insert.run([table_name, name, cid]);
     });
   });
+
+  if (
+    db.exec("SELECT count(*) FROM litespread_table")[0].values[0][0] === 0
+  ) {
+    throw new Error("Invalid file or no tables found.");
+  }
 }
 
 // skipCommit is useful for tests
