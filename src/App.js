@@ -17,7 +17,8 @@ import {
   Popover,
   Position,
   Card,
-  NonIdealState
+  NonIdealState,
+  EditableText
 } from '@blueprintjs/core';
 import '@blueprintjs/core/lib/css/blueprint.css';
 import '@blueprintjs/icons/lib/css/blueprint-icons.css';
@@ -132,10 +133,21 @@ class Document extends Component {
     this.save();
   };
 
+  // download file to disk
   saveFile = () => {
     const blob = new Blob([this.state.db.export()], { type: MIME_TYPE });
     FileSaver.saveAs(blob, this.filename);
   };
+
+  rename = (requestedName) => {
+    console.log(this.blob);
+    remoteClient
+      .add(requestedName, this.state.db.export().buffer)
+      .then(actualName => this.props.history.push('/files/' + actualName));
+
+    remoteClient
+      .remove(this.filename);
+  }
 
   render() {
     return (
@@ -332,7 +344,7 @@ const MainNavbar = props => {
           <img src="/img/logo.svg" alt="" />
           <NavbarHeading>Litespread</NavbarHeading>
         </Link>
-        {props.doc && props.doc.filename}
+        {props.doc && <EditableText defaultValue={props.doc.filename} onConfirm={props.doc.rename} />}
       </NavbarGroup>
       <NavbarGroup align="right">
         <Button className="pt-minimal" iconName="home">
