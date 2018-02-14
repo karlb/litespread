@@ -117,9 +117,8 @@ function updateDocument(db) {
 }
 
 function upgradeDocument(db) {
-  const api_version = db.exec(
-      "SELECT api_version FROM litespread_document"
-      )[0].values[0][0];
+  const api_version = db.exec('SELECT api_version FROM litespread_document')[0]
+    .values[0][0];
 
   if (api_version === LATEST_VERSION) {
     return;
@@ -129,7 +128,7 @@ function upgradeDocument(db) {
   }
 
   // increase api_version and continue until we're at the latest version
-  db.run("UPDATE litespread_document SET api_version = ?", [api_version + 1]);
+  db.run('UPDATE litespread_document SET api_version = ?', [api_version + 1]);
   console.log(api_version);
   upgradeDocument(db);
 }
@@ -151,8 +150,9 @@ function importDocument(db) {
             description text
         );
     `);
-  db.run("INSERT INTO litespread_document(api_version) VALUES (?)",
-      [LATEST_VERSION]);
+  db.run('INSERT INTO litespread_document(api_version) VALUES (?)', [
+    LATEST_VERSION
+  ]);
   db.run(`
         CREATE TABLE IF NOT EXISTS litespread_table (
             table_name text NOT NULL PRIMARY KEY,
@@ -175,9 +175,9 @@ function importDocument(db) {
             description text,
             width float,
             PRIMARY KEY (table_name, name)
+        );
         CREATE UNIQUE INDEX litespread_column_unique_position
           ON litespread_column(table_name, position);
-        );
     `);
   var col_insert = db.prepare(`
         INSERT INTO litespread_column(table_name, name, position)
@@ -189,10 +189,8 @@ function importDocument(db) {
     });
   });
 
-  if (
-    db.exec("SELECT count(*) FROM litespread_table")[0].values[0][0] === 0
-  ) {
-    throw new Error("Invalid file or no tables found.");
+  if (db.exec('SELECT count(*) FROM litespread_table')[0].values[0][0] === 0) {
+    throw new Error('Invalid file or no tables found.');
   }
 }
 
@@ -313,11 +311,8 @@ function importParsedJson(db, json, tableName) {
   json.data.forEach(row => stmt.run(row));
 }
 
-
 function toSafeName(name) {
-  return name
-    .replace(/\s+/g, '_')
-    .replace(/([a-zA-Z0-9_]+).*/, '$1');
+  return name.replace(/\s+/g, '_').replace(/([a-zA-Z0-9_]+).*/, '$1');
 }
 
 export {

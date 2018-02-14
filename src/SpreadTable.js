@@ -8,7 +8,7 @@ import {
   EditableName,
   TableLoadingOption
 } from '@blueprintjs/table';
-import { EditableText, Menu, MenuItem, Callout } from '@blueprintjs/core';
+import { EditableText, Menu, MenuItem, Callout, MenuDivider } from '@blueprintjs/core';
 import * as ls from './backend/litespread.js';
 import '@blueprintjs/table/lib/css/table.css';
 import colTypes from './col-types.js';
@@ -219,14 +219,21 @@ class SpreadTable extends React.PureComponent {
           numRows={this.state.rows.length}
           enableColumnReordering={true}
           onColumnsReordered={(oldIndex, newIndex, length) => {
-            ls.moveColumn(this.props.db, this.props.tableName, oldIndex, newIndex);
+            ls.moveColumn(
+              this.props.db,
+              this.props.tableName,
+              oldIndex,
+              newIndex
+            );
             this.props.onSchemaChange();
           }}
           enableColumnInteractionBar={true}
           enableFocusedCell={true}
           enableMultipleSelection={false}
           loadingOptions={this.state.loadingOptions}
-          onColumnWidthChanged={(colIndex, width) => this.setColAttr(this.state.table.columns[colIndex], 'width', width)}
+          onColumnWidthChanged={(colIndex, width) =>
+            this.setColAttr(this.state.table.columns[colIndex], 'width', width)
+          }
           columnWidths={this.state.table.columns.map(c => c.width)}
           className="spreadtable"
         >

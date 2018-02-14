@@ -139,15 +139,14 @@ class Document extends React.PureComponent {
     FileSaver.saveAs(blob, this.filename);
   };
 
-  rename = (requestedName) => {
+  rename = requestedName => {
     console.log(this.blob);
     remoteClient
       .add(requestedName, this.state.db.export().buffer)
       .then(actualName => this.props.history.push('/files/' + actualName));
 
-    remoteClient
-      .remove(this.filename);
-  }
+    remoteClient.remove(this.filename);
+  };
 
   render() {
     return (
@@ -344,7 +343,12 @@ const MainNavbar = props => {
           <img src="/img/logo.svg" alt="" />
           <NavbarHeading>Litespread</NavbarHeading>
         </Link>
-        {props.doc && <EditableText defaultValue={props.doc.filename} onConfirm={props.doc.rename} />}
+        {props.doc && (
+          <EditableText
+            defaultValue={props.doc.filename}
+            onConfirm={props.doc.rename}
+          />
+        )}
       </NavbarGroup>
       <NavbarGroup align="right">
         <Button className="pt-minimal" iconName="home">

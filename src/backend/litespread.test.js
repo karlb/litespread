@@ -95,7 +95,7 @@ it('import2', () => {
 });
 
 it('moveColumn', () => {
-  function checkMoveResult(from, to, result){
+  function checkMoveResult(from, to, result) {
     const db = new sql.Database();
     db.run(`
           CREATE TABLE example (

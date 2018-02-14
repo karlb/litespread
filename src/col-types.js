@@ -5,38 +5,38 @@ let colTypes = {
     name: 'Generic',
     icon: 'blank',
     align: 'left',
-    className: '',
+    className: ''
   },
   number: {
     name: 'Number',
     icon: 'numerical',
     align: 'right',
-    className: 'pt-monospace-text',
+    className: 'pt-monospace-text'
   },
   money: {
     name: 'Money',
     icon: 'dollar',
     align: 'right',
-    className: 'pt-monospace-text',
+    className: 'pt-monospace-text'
   },
   date: {
     name: 'Date',
-    icon: 'numerical',
+    icon: 'calendar',
     align: 'right',
-    validator: x => moment.utc(x).toISOString(),
-  },
-}
+    validator: x => moment.utc(x).toISOString()
+  }
+};
 
 const defaults = {
-  validator: x => x,
-}
+  validator: x => x
+};
 
 Object.keys(colTypes).forEach(cType => {
   Object.keys(defaults).forEach(key => {
     if (colTypes[cType][key] === undefined) {
       colTypes[cType][key] = defaults[key];
     }
-  })
+  });
 });
 
 export default colTypes;
