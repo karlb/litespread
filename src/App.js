@@ -311,25 +311,25 @@ const MainNavbar = props => {
           value=""
         />
         <MenuItem
-          iconName="document-open"
+          icon="document-open"
           text="Load from Disk"
           onClick={() => document.getElementById('inputfile').click()}
         />
         */}
         <MenuItem
-          iconName="download"
+          icon="download"
           text="Save to Disk"
           onClick={props.doc.saveFile}
         />
-        <MenuItem iconName="folder-open" text="Synced Files">
-          <MenuItem iconName="blank" text="..." />
+        <MenuItem icon="folder-open" text="Synced Files">
+          <MenuItem icon="blank" text="..." />
         </MenuItem>
       </Menu>
     );
 
     menus = (
       <Popover content={fileMenu} position={Position.BOTTOM}>
-        <Button className="pt-minimal" iconName="document">
+        <Button className="pt-minimal" icon="document">
           File
         </Button>
       </Popover>
@@ -351,14 +351,14 @@ const MainNavbar = props => {
         )}
       </NavbarGroup>
       <NavbarGroup align="right">
-        <Button className="pt-minimal" iconName="home">
+        <Button className="pt-minimal" icon="home">
           Home
         </Button>
         {menus}
         <NavbarDivider />
-        <Button className="pt-minimal" iconName="user" />
-        <Button className="pt-minimal" iconName="notifications" />
-        <Button className="pt-minimal" iconName="cog" />
+        <Button className="pt-minimal" icon="user" />
+        <Button className="pt-minimal" icon="notifications" />
+        <Button className="pt-minimal" icon="cog" />
       </NavbarGroup>
     </Navbar>
   );

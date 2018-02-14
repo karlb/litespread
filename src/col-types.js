@@ -5,25 +5,29 @@ let colTypes = {
     name: 'Generic',
     icon: 'blank',
     align: 'left',
-    className: ''
+    className: '',
+    defaultPrecision: null
   },
   number: {
     name: 'Number',
     icon: 'numerical',
     align: 'right',
-    className: 'pt-monospace-text'
+    className: 'pt-monospace-text',
+    defaultPrecision: 0
   },
   money: {
     name: 'Money',
     icon: 'dollar',
     align: 'right',
-    className: 'pt-monospace-text'
+    className: 'pt-monospace-text',
+    defaultPrecision: 2
   },
   date: {
     name: 'Date',
     icon: 'calendar',
     align: 'right',
-    validator: x => moment.utc(x).toISOString()
+    validator: x => moment.utc(x).toISOString(),
+    defaultPrecision: null
   }
 };
 

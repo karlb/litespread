@@ -8,7 +8,7 @@ import {
   EditableName,
   TableLoadingOption
 } from '@blueprintjs/table';
-import { EditableText, Menu, MenuItem, Callout, MenuDivider } from '@blueprintjs/core';
+import { EditableText, Menu, MenuItem, Callout, MenuDivider, Button, ButtonGroup } from '@blueprintjs/core';
 import * as ls from './backend/litespread.js';
 import '@blueprintjs/table/lib/css/table.css';
 import colTypes from './col-types.js';
@@ -139,45 +139,72 @@ class SpreadTable extends React.PureComponent {
         );
       }
     };
+    const changePrecision = (change) => {
+      this.props.db.changeRows(
+        `
+                    UPDATE litespread_column
+                       SET precision = precision + ?
+                    WHERE table_name = ?
+                      AND name = ?
+                `,
+        [change, column.table_name, column.name],
+        1
+      );
+      this.props.onSchemaChange();
+    }
     return (
       <Menu>
-        <MenuItem iconName="percentage" text="Change Format">
+        <MenuItem icon="percentage" text="Change Format">
+          <MenuDivider title="Types" />
           {Object.entries(colTypes).map(([id, c]) => (
             <MenuItem
-              iconName={c.icon}
+              icon={c.icon}
               text={c.name}
-              onClick={() => setCol('format', id)}
+              onClick={() => {
+                setCol('format', id);
+                setCol('precision', c.defaultPrecision);
+              }}
               key={id}
             />
           ))}
+          <MenuDivider title="Settings" />
+          <MenuItem shouldDismissPopover={false} text={
+            <span>
+              Precision:
+              <ButtonGroup minimal={true} large={false}>
+                <Button icon="small-minus" onClick={() => changePrecision(-1)} />
+                <Button icon="small-plus" onClick={() => changePrecision(+1)} />
+              </ButtonGroup>
+            </span>
+          }/>
         </MenuItem>
-        <MenuItem iconName="widget-footer" text="Change Summary">
+        <MenuItem icon="widget-footer" text="Change Summary">
           <MenuItem
-            iconName="blank"
+            icon="blank"
             text="None"
             onClick={() => setCol('summary', null)}
           />
           <MenuItem
-            iconName="add"
+            icon="add"
             text="Sum"
             onClick={() => setCol('summary', 'sum')}
           />
           <MenuItem
-            iconName="layout-linear"
+            icon="layout-linear"
             text="Average"
             onClick={() => setCol('summary', 'avg')}
           />
         </MenuItem>
-        <MenuItem iconName="trash" text="Delete Column" onClick={deleteCol} />
+        <MenuItem icon="trash" text="Delete Column" onClick={deleteCol} />
         {/*
-                {column.formula && <MenuItem iconName="function" text="Change Formula" />}
-                <MenuItem iconName="asterisk" text="Change Column Type">
-                    <MenuItem iconName="asterisk" text="Generic" onClick={setGeneric}/>
-                    <MenuItem iconName="function" text="Formula" onClick={() => setCol('formula', '1')} />
+                {column.formula && <MenuItem icon="function" text="Change Formula" />}
+                <MenuItem icon="asterisk" text="Change Column Type">
+                    <MenuItem icon="asterisk" text="Generic" onClick={setGeneric}/>
+                    <MenuItem icon="function" text="Formula" onClick={() => setCol('formula', '1')} />
                 </MenuItem>
-                <MenuItem iconName="wrench" text="Rename Column" />
-                <MenuItem iconName="sort-asc" text="Sort Asc" />
-                <MenuItem iconName="sort-desc" text="Sort Desc" />
+                <MenuItem icon="wrench" text="Rename Column" />
+                <MenuItem icon="sort-asc" text="Sort Asc" />
+                <MenuItem icon="sort-desc" text="Sort Desc" />
                 */}
       </Menu>
     );

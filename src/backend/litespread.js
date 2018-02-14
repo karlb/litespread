@@ -1,10 +1,11 @@
 var squel = require('squel');
 var helper = require('./litespread_helper.js');
 
-const LATEST_VERSION = 3;
+const LATEST_VERSION = 4;
 
 var formatters = {
-  money: x => `CASE WHEN ${x} IS NOT NULL THEN printf("%.2f", ${x}) END`,
+  money: (x, c) => `CASE WHEN ${x} IS NOT NULL THEN printf("%.${c.precision}f", ${x}) END`,
+  number: (x, c) => `CASE WHEN ${x} IS NOT NULL THEN printf("%.${c.precision}f", ${x}) END`,
   date: x => `CASE WHEN ${x} IS NOT NULL THEN date(${x}) END`
 };
 
@@ -77,7 +78,7 @@ function make_raw_view(db, table) {
 
 function format_col(col, select) {
   var formatter = formatters[col.format] || (x => x);
-  return formatter(select || col.name) + ' AS ' + col.name;
+  return formatter(select || col.name, col) + ' AS ' + col.name;
 }
 
 function make_formatted_view(db, table) {
@@ -125,6 +126,8 @@ function upgradeDocument(db) {
   } else if (api_version === 1) {
   } else if (api_version === 2) {
     db.run('ALTER TABLE litespread_column ADD COLUMN width float');
+  } else if (api_version === 3) {
+    db.run('ALTER TABLE litespread_column ADD COLUMN precision int');
   }
 
   // increase api_version and continue until we're at the latest version
@@ -174,6 +177,7 @@ function importDocument(db) {
             formula text,
             description text,
             width float,
+            precision int,
             PRIMARY KEY (table_name, name)
         );
         CREATE UNIQUE INDEX litespread_column_unique_position
