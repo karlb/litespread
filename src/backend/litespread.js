@@ -174,7 +174,9 @@ function importDocument(db) {
             formula text,
             description text,
             width float,
-            PRIMARY KEY (table_name, position)
+            PRIMARY KEY (table_name, name)
+        CREATE UNIQUE INDEX litespread_column_unique_position
+          ON litespread_column(table_name, position);
         );
     `);
   var col_insert = db.prepare(`
@@ -247,6 +249,39 @@ function addColumn(db, tableName, colName) {
     `);
 }
 
+function moveColumn(db, tableName, fromPosition, toPosition) {
+  // Since sqlite checks the unique constraint after every row and there is no
+  // way to force a specific order or disable the constraint, we'll have to
+  // work around that. We do this by assigning each processed row a position
+  // with the value 10000 added and then subtract that value from all rows
+  // afterwards. This avoids temporary violations of the unique constraint.
+  db.run(`
+      BEGIN;
+        UPDATE litespread_column
+        SET position = 10000 + CASE
+            WHEN position = ${fromPosition} THEN ${toPosition}
+            WHEN ${fromPosition} < ${toPosition} THEN
+              position + CASE
+                WHEN position BETWEEN ${fromPosition} AND ${toPosition}
+                  THEN -1
+                ELSE 0
+              END
+            ELSE
+              position + CASE
+                WHEN position BETWEEN ${toPosition} AND ${fromPosition}
+                  THEN +1
+                ELSE 0
+              END
+          END
+        WHERE table_name = '${tableName}';
+
+        UPDATE litespread_column
+        SET position = position - 10000
+        WHERE table_name = '${tableName}';
+      COMMIT;
+    `);
+}
+
 function addFormulaColumn(db, tableName, colName, formula) {
   db.run(
     `
@@ -292,5 +327,6 @@ export {
   changeColumnName,
   getTableDesc,
   addColumn,
+  moveColumn,
   addFormulaColumn
 };

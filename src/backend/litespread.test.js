@@ -94,6 +94,32 @@ it('import2', () => {
   ls.importParsedJson(db, json, 'import2 test');
 });
 
+it('moveColumn', () => {
+  function checkMoveResult(from, to, result){
+    const db = new sql.Database();
+    db.run(`
+          CREATE TABLE example (
+              col0 text,
+              col1 int,
+              col2 int,
+              col3 int
+          );
+      `);
+    ls.importDocument(db);
+    ls.moveColumn(db, 'example', from, to);
+    let rows = db.exec(`
+          SELECT name, position FROM litespread_column
+          WHERE table_name ='example' ORDER BY position
+      `)[0].values;
+    expect(rows).toEqual(result.map((x, i) => ['col' + x, i]));
+  }
+
+  checkMoveResult(2, 1, [0, 2, 1, 3]);
+  checkMoveResult(1, 2, [0, 2, 1, 3]);
+  checkMoveResult(1, 3, [0, 2, 3, 1]);
+  checkMoveResult(0, 2, [1, 2, 0, 3]);
+});
+
 it('rename new column', () => {
   const db = createTestDB();
   ls.importDocument(db);

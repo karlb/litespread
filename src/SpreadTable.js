@@ -217,9 +217,12 @@ class SpreadTable extends React.PureComponent {
         </div>
         <Table
           numRows={this.state.rows.length}
-          /*enableColumnReordering={true}
-                    onColumnsReordered={(oldIndex, newIndex, length) => console.log(oldIndex, newIndex, length)}
-                    enableColumnInteractionBar={true}*/
+          enableColumnReordering={true}
+          onColumnsReordered={(oldIndex, newIndex, length) => {
+            ls.moveColumn(this.props.db, this.props.tableName, oldIndex, newIndex);
+            this.props.onSchemaChange();
+          }}
+          enableColumnInteractionBar={true}
           enableFocusedCell={true}
           enableMultipleSelection={false}
           loadingOptions={this.state.loadingOptions}
