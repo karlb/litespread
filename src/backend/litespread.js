@@ -34,7 +34,7 @@ function make_raw_view(db, table) {
   });
   // resolve dependencies
   let availableCols = new Set(
-    table.columns.filter(c => !c.formula).map(c => c.name)
+    table.columns.filter(c => !c.formula).map(c => c.name.toLowerCase())
   );
   let todoCols = table.columns;
   let iterations = 0;
@@ -46,7 +46,7 @@ function make_raw_view(db, table) {
       col.deps = col.deps.difference(availableCols);
       if (col.deps.size === 0) {
         s.field(col.formula || col.name, col.name);
-        nextAvailableCols.add(col.name);
+        nextAvailableCols.add(col.name.toLowerCase());
       } else {
         nextTodoCols.push(col);
       }
