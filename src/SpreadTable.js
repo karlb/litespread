@@ -31,7 +31,7 @@ class SpreadTable extends React.PureComponent {
   updateFromDb(db) {
     let result;
     try {
-      result = db.exec(`SELECT * FROM ${this.props.tableName}_formatted`);
+      result = db.exec(`SELECT * FROM ${this.props.tableName}_formatted ORDER BY rowid`);
     } catch (e) {
       this.setState({
         loadingOptions: [TableLoadingOption.CELLS],
@@ -255,6 +255,17 @@ class SpreadTable extends React.PureComponent {
             this.props.onSchemaChange();
           }}
           enableColumnInteractionBar={true}
+          enableRowReordering={true}
+          onRowsReordered={(oldIndex, newIndex, length) => {
+            ls.moveRow(
+              this.props.db,
+              this.props.tableName,
+              oldIndex,
+              newIndex
+            );
+            this.props.onDataChange();
+            console.log(oldIndex,newIndex);
+          }}
           enableFocusedCell={true}
           enableMultipleSelection={false}
           loadingOptions={this.state.loadingOptions}

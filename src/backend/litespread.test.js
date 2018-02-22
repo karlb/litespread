@@ -120,6 +120,37 @@ it('moveColumn', () => {
   checkMoveResult(0, 2, [1, 2, 0, 3]);
 });
 
+it('moveRow', () => {
+  function checkMoveResult(from, to, result) {
+    const db = new sql.Database();
+    db.run(`
+          CREATE TABLE example (
+              value int
+          );
+      `);
+    ls.importDocument(db);
+    db.run(`
+        INSERT INTO example
+        VALUES (0), (1), (2), (3)
+    `);
+    ls.moveRow(db, 'example', from, to);
+    let rows = db.exec(`
+          SELECT rowid, value FROM example
+          ORDER BY rowid
+      `)[0].values;
+    expect(rows).toEqual(result.map((x, i) => [i + 1, x]));
+  }
+
+  checkMoveResult(2, 1, [0, 2, 1, 3]);
+  checkMoveResult(1, 2, [0, 2, 1, 3]);
+  checkMoveResult(1, 3, [0, 2, 3, 1]);
+  checkMoveResult(0, 2, [1, 2, 0, 3]);
+
+  // ignore errors
+  checkMoveResult(-1, 2, [0, 1, 2, 3]);
+  checkMoveResult(1, 4, [0, 1, 2, 3]);
+});
+
 it('rename new column', () => {
   const db = createTestDB();
   ls.importDocument(db);

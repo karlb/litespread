@@ -137,6 +137,8 @@ function upgradeDocument(db) {
 }
 
 function importDocument(db) {
+  // VACUUM makes all rowids sequential, which is currently required for sorting
+  db.run('VACUUM main');
   if (
     db.exec(
       "SELECT count(*) FROM sqlite_master WHERE name = 'litespread_document'"
@@ -284,6 +286,48 @@ function moveColumn(db, tableName, fromPosition, toPosition) {
     `);
 }
 
+function moveRow(db, tableName, fromPosition, toPosition) {
+  // rowids start at 1
+  fromPosition += 1;
+  toPosition += 1;
+  const count = db.exec(`
+      SELECT count(*) FROM ${tableName} WHERE rowid IN (${fromPosition}, ${toPosition})
+  `)[0].values[0][0];
+  if (count !== 2) {
+    console.warn('Move rowids not in table');
+    return;
+  }
+  // Since sqlite checks the unique constraint after every row and there is no
+  // way to force a specific order or disable the constraint, we'll have to
+  // work around that. We do this by assigning each processed row a position
+  // with the value 10000 added and then subtract that value from all rows
+  // afterwards. This avoids temporary violations of the unique constraint.
+  const sql = `
+      BEGIN;
+        UPDATE ${tableName}
+        SET rowid = 1000000 + CASE
+            WHEN rowid = ${fromPosition} THEN ${toPosition}
+            WHEN ${fromPosition} < ${toPosition} THEN
+              rowid + CASE
+                WHEN rowid BETWEEN ${fromPosition} AND ${toPosition}
+                  THEN -1
+                ELSE 0
+              END
+            ELSE
+              rowid + CASE
+                WHEN rowid BETWEEN ${toPosition} AND ${fromPosition}
+                  THEN +1
+                ELSE 0
+              END
+          END;
+
+        UPDATE ${tableName}
+        SET rowid = rowid - 1000000;
+      COMMIT;
+    `;
+  db.run(sql);
+}
+
 function addFormulaColumn(db, tableName, colName, formula) {
   db.run(
     `
@@ -327,5 +371,6 @@ export {
   getTableDesc,
   addColumn,
   moveColumn,
+  moveRow,
   addFormulaColumn
 };
