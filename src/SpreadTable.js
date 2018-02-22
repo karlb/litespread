@@ -31,7 +31,7 @@ class SpreadTable extends React.PureComponent {
   updateFromDb(db) {
     let result;
     try {
-      result = db.exec(`SELECT * FROM ${this.props.tableName}_formatted ORDER BY rowid`);
+      result = db.exec(`SELECT * FROM ${this.props.tableName}_formatted`);
     } catch (e) {
       this.setState({
         loadingOptions: [TableLoadingOption.CELLS],
@@ -121,7 +121,7 @@ class SpreadTable extends React.PureComponent {
     this.props.onSchemaChange();
   };
 
-  renderHeaderMenu = (tableName, column) => {
+  renderHeaderMenu = (table, column) => {
     const setCol = (attr, val) => this.setColAttr(column, attr, val);
     const deleteCol = () => {
       this.props.db.changeRows(
@@ -151,6 +151,11 @@ class SpreadTable extends React.PureComponent {
         1
       );
       this.props.onSchemaChange();
+    }
+    const setSort = (orderBy) => {
+      table.setCol('order_by', orderBy);
+      this.props.onSchemaChange();
+      this.props.onDataChange();
     }
     return (
       <Menu>
@@ -193,6 +198,18 @@ class SpreadTable extends React.PureComponent {
             icon="layout-linear"
             text="Average"
             onClick={() => setCol('summary', 'avg')}
+          />
+        </MenuItem>
+        <MenuItem icon="sort-asc" text="Order by">
+          <MenuItem
+            icon="sort-asc"
+            text={column.name + ' ascending'}
+            onClick={() => setSort(column.name + ' ASC')}
+          />
+          <MenuItem
+            icon="sort-desc"
+            text={column.name + ' descening'}
+            onClick={() => setSort(column.name + ' DESC')}
           />
         </MenuItem>
         <MenuItem icon="trash" text="Delete Column" onClick={deleteCol} />
@@ -257,6 +274,11 @@ class SpreadTable extends React.PureComponent {
           enableColumnInteractionBar={true}
           enableRowReordering={true}
           onRowsReordered={(oldIndex, newIndex, length) => {
+            if (this.state.table.order_by) {
+              this.state.table.sortRowids();
+              this.state.table.setCol('order_by', null);  // manual sorting
+              this.props.onSchemaChange();
+            }
             ls.moveRow(
               this.props.db,
               this.props.tableName,
@@ -264,7 +286,6 @@ class SpreadTable extends React.PureComponent {
               newIndex
             );
             this.props.onDataChange();
-            console.log(oldIndex,newIndex);
           }}
           enableFocusedCell={true}
           enableMultipleSelection={false}
@@ -354,7 +375,7 @@ class SpreadTable extends React.PureComponent {
     return (
       <ColumnHeaderCell
         name={this.state.table.columns[colIndex].name}
-        menuRenderer={() => this.renderHeaderMenu(this.state.table.name, col)}
+        menuRenderer={() => this.renderHeaderMenu(this.state.table, col)}
         nameRenderer={this.nameRenderer}
       >
         {col.formula && (

@@ -1,5 +1,7 @@
 var sqliteParser = require('sqlite-parser');
 
+/////////////////////// findCols /////////////////////
+
 /* eslint no-extend-native: ["error", { "exceptions": ["Set"] }] */
 Set.prototype.union = function(setB) {
   var union = new Set(this);
@@ -41,4 +43,31 @@ function findCols(formula) {
   return cols;
 }
 
-export { findCols };
+////////////////////// db methods /////////////////
+
+function addDbMethods(db) {
+    db.changeRows = (sqlStmt, params, expectedChanges) => {
+      const changes = db.run(sqlStmt, params).getRowsModified();
+      console.assert(
+        changes === expectedChanges,
+        'Got %i changes instead of %i in statement %s with params %s',
+        changes,
+        expectedChanges,
+        sqlStmt,
+        params
+      );
+    };
+
+    db.changeRow = (sqlStmt, params) => {
+      db.changeRows(sqlStmt, params, 1);
+    }
+
+    db.getAsObject = (sqlStmt, params) => {
+      const stmt = db.prepare(sqlStmt)
+      const obj = stmt.getAsObject(params || {});
+      stmt.free();
+      return obj;
+    }
+}
+
+export { findCols, addDbMethods };

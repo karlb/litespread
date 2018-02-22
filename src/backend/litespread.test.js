@@ -159,3 +159,30 @@ it('rename new column', () => {
   ls.changeColumnName(db, table, 2, 'work_start');
   ls.updateDocument(db);
 });
+
+it('sortRowids', () => {
+  function checkResult(orderBy, result) {
+    const db = new sql.Database();
+    db.run(`
+          CREATE TABLE example (
+              value int
+          );
+      `);
+    ls.importDocument(db);
+    ls.updateDocument(db);
+    db.run(`
+        INSERT INTO example
+        VALUES (0), (1), (2), (3)
+    `);
+    const table = ls.getTableDesc(db, 'example');
+    table.setCol('order_by', orderBy);
+    table.sortRowids();
+    let rows = db.exec(`
+          SELECT rowid, value FROM example
+          ORDER BY rowid
+      `)[0].values;
+    expect(rows).toEqual(result.map((x, i) => [i + 1, x]));
+  }
+
+  checkResult('value DESC', [3, 2, 1, 0]);
+});

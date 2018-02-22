@@ -1,7 +1,7 @@
 var squel = require('squel');
 var helper = require('./litespread_helper.js');
 
-const LATEST_VERSION = 4;
+const LATEST_VERSION = 5;
 
 var formatters = {
   money: (x, c) => `CASE WHEN ${x} IS NOT NULL THEN printf("%.${c.precision}f", ${x}) END`,
@@ -69,10 +69,15 @@ function make_raw_view(db, table) {
       .field('*');
   }
 
+  let selectString = s.toString();
+  if (table.order_by) {
+    selectString += ' ORDER BY ' + table.order_by;
+  }
+
   db.run(`
         DROP VIEW IF EXISTS ${table.name}_raw;
         CREATE VIEW ${table.name}_raw AS
-        ${s.toString()}
+        ${selectString}
     `);
 }
 
@@ -128,17 +133,19 @@ function upgradeDocument(db) {
     db.run('ALTER TABLE litespread_column ADD COLUMN width float');
   } else if (api_version === 3) {
     db.run('ALTER TABLE litespread_column ADD COLUMN precision int');
+  } else if (api_version === 4) {
+    db.run('ALTER TABLE litespread_table ADD COLUMN order_by text');
   }
 
   // increase api_version and continue until we're at the latest version
   db.run('UPDATE litespread_document SET api_version = ?', [api_version + 1]);
-  console.log(api_version);
   upgradeDocument(db);
 }
 
 function importDocument(db) {
   // VACUUM makes all rowids sequential, which is currently required for sorting
   db.run('VACUUM main');
+  helper.addDbMethods(db);
   if (
     db.exec(
       "SELECT count(*) FROM sqlite_master WHERE name = 'litespread_document'"
@@ -161,7 +168,8 @@ function importDocument(db) {
   db.run(`
         CREATE TABLE IF NOT EXISTS litespread_table (
             table_name text NOT NULL PRIMARY KEY,
-            description text
+            description text,
+            order_by text
         );
         INSERT INTO litespread_table(table_name)
         SELECT DISTINCT name
@@ -223,23 +231,56 @@ function changeColumnName(db, table, colIndex, newName, skipCommit) {
   }
 }
 
-function getTableDesc(db, table_name) {
+function getTableDesc(db, tableName) {
   let columns = [];
   db.each(
     `
             SELECT * FROM litespread_column
-            WHERE table_name = '${table_name}'
+            WHERE table_name = '${tableName}'
         `,
     [],
     db_row => columns.push(db_row)
   );
 
+  let table = db.getAsObject(`SELECT * FROM litespread_table WHERE table_name = '${tableName}'`);
+
   return {
-    name: table_name,
+    name: tableName,
     columns: columns,
-    hasFooter: columns.some(c => c.summary)
+    order_by: table.order_by,
+    hasFooter: columns.some(c => c.summary),
+    setCol: (col, val) => {
+      db.changeRow(
+        `
+                    UPDATE litespread_table
+                       SET ${col} = ?
+                    WHERE table_name = ?
+                `,
+        [val, tableName]
+      );
+    },
+    sortRowids: () => {sortRowids(db, tableName)},
   };
 }
+
+
+function sortRowids(db, tableName) {
+  const orderBy = db.exec(`SELECT order_by FROM litespread_table WHERE table_name = '${tableName}'`)[0].values[0][0];
+  console.assert(orderBy, 'Need sort criterion!');
+  const sortedRows = db.exec(`
+      SELECT rowid FROM ${tableName}_raw ORDER BY ${orderBy}
+  `)[0].values;
+  const update = db.prepare(`UPDATE ${tableName} SET rowid = ? WHERE rowid = -?`);
+  db.run(`UPDATE ${tableName} SET rowid = -rowid`);
+  sortedRows.forEach(([oldRowid], i) => {
+    update.run([i + 1, oldRowid]);
+    console.assert(
+        db.getRowsModified() === 1,
+        `Failed to changed value for row ${oldRowid} to ${i + 1}`
+    );
+  });
+}
+
 
 function addColumn(db, tableName, colName) {
   db.run(`
