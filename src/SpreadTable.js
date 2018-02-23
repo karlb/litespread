@@ -108,21 +108,7 @@ class SpreadTable extends React.PureComponent {
     this.props.onSchemaChange();
   };
 
-  setColAttr = (column, attr, value) => {
-    this.props.db.changeRows(
-      `
-                UPDATE litespread_column SET ${attr} = ?
-                WHERE table_name = ?
-                  AND name = ?
-            `,
-      [value, this.props.tableName, column.name],
-      1
-    );
-    this.props.onSchemaChange();
-  };
-
   renderHeaderMenu = (table, column) => {
-    const setCol = (attr, val) => this.setColAttr(column, attr, val);
     const deleteCol = () => {
       this.props.db.changeRows(
         `
@@ -166,8 +152,8 @@ class SpreadTable extends React.PureComponent {
               icon={c.icon}
               text={c.name}
               onClick={() => {
-                setCol('format', id);
-                setCol('precision', c.defaultPrecision);
+                column.setCol('format', id);
+                column.setCol('precision', c.defaultPrecision);
               }}
               key={id}
             />
@@ -187,17 +173,17 @@ class SpreadTable extends React.PureComponent {
           <MenuItem
             icon="blank"
             text="None"
-            onClick={() => setCol('summary', null)}
+            onClick={() => column.setCol('summary', null)}
           />
           <MenuItem
             icon="add"
             text="Sum"
-            onClick={() => setCol('summary', 'sum')}
+            onClick={() => column.setCol('summary', 'sum')}
           />
           <MenuItem
             icon="layout-linear"
             text="Average"
-            onClick={() => setCol('summary', 'avg')}
+            onClick={() => column.setCol('summary', 'avg')}
           />
         </MenuItem>
         <MenuItem icon="sort-asc" text="Order by">
@@ -217,7 +203,7 @@ class SpreadTable extends React.PureComponent {
                 {column.formula && <MenuItem icon="function" text="Change Formula" />}
                 <MenuItem icon="asterisk" text="Change Column Type">
                     <MenuItem icon="asterisk" text="Generic" onClick={setGeneric}/>
-                    <MenuItem icon="function" text="Formula" onClick={() => setCol('formula', '1')} />
+                    <MenuItem icon="function" text="Formula" onClick={() => column.setCol('formula', '1')} />
                 </MenuItem>
                 <MenuItem icon="wrench" text="Rename Column" />
                 <MenuItem icon="sort-asc" text="Sort Asc" />
@@ -290,9 +276,10 @@ class SpreadTable extends React.PureComponent {
           enableFocusedCell={true}
           enableMultipleSelection={false}
           loadingOptions={this.state.loadingOptions}
-          onColumnWidthChanged={(colIndex, width) =>
-            this.setColAttr(this.state.table.columns[colIndex], 'width', width)
-          }
+          onColumnWidthChanged={(colIndex, width) => {
+            console.log(this.state.table.columns[colIndex].setCol);
+            this.state.table.columns[colIndex].setCol('width', width)
+          }}
           columnWidths={this.state.table.columns.map(c => c.width)}
           className="spreadtable"
         >
@@ -369,7 +356,7 @@ class SpreadTable extends React.PureComponent {
   columnHeaderCellRenderer = colIndex => {
     const col = this.state.table.columns[colIndex];
     const onFormulaChange = (col, formula) => {
-      this.setColAttr(col, 'formula', formula);
+      col.setCol('formula', formula);
       this.props.onSchemaChange();
     };
     return (

@@ -252,7 +252,7 @@ class Table {
               WHERE table_name = '${tableRow.table_name}'
           `,
       [],
-      db_row => columns.push(db_row)
+      db_row => columns.push(new Column(db, db_row))
     );
 
     this.db = db;
@@ -275,6 +275,25 @@ class Table {
 
   sortRowids() {
     sortRowids(this.db, this.name)
+  }
+}
+
+
+class Column {
+  constructor(db, columnRow) {
+    Object.assign(this, columnRow);
+    this.db = db;
+  }
+
+  setCol(col, val) {
+    console.log(col, val, this.table_name, this.name);
+    this.db.changeRow(`
+          UPDATE litespread_column SET ${col} = ?
+          WHERE table_name = ?
+            AND name = ?
+      `,
+      [val, this.table_name, this.name]
+    );
   }
 }
 
