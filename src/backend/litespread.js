@@ -113,7 +113,7 @@ function make_formatted_view(db, table) {
 
 function updateDocument(db) {
   let tables = db.getAsObjects(
-      'SELECT table_name FROM litespread_table');
+      'SELECT * FROM litespread_table');
   tables = tables.map(t => new Table(db, t));
   tables.forEach(table => {
     make_raw_view(db, table);
@@ -227,6 +227,18 @@ function changeColumnName(db, table, colIndex, newName, skipCommit) {
   db.exec(q);
   if (!skipCommit) {
     db.run('COMMIT');
+  }
+}
+
+
+class Document {
+  constructor(db) {
+    importDocument(db);
+    updateDocument(db);
+
+    this.db = db;
+    this.tables = db.getAsObjects('SELECT * FROM litespread_table')
+      .map(t => new Table(db, t));
   }
 }
 
@@ -422,5 +434,6 @@ export {
   addColumn,
   moveColumn,
   moveRow,
-  addFormulaColumn
+  addFormulaColumn,
+  Document
 };

@@ -14,6 +14,18 @@ function createTestDB() {
   return db;
 }
 
+function createTestDoc() {
+  const db = new sql.Database();
+  db.run(`
+        CREATE TABLE employee (
+            name text,
+            department_id int
+        );
+    `);
+  return new ls.Document(db);
+}
+
+
 it('updateDocument', () => {
   const db = createTestDB();
   ls.importDocument(db);
@@ -27,51 +39,48 @@ it('updateDocument', () => {
 });
 
 it('importDocument', () => {
-  const db = createTestDB();
-  ls.importDocument(db);
+  const doc = createTestDoc();
   let rows;
 
-  rows = db.exec('SELECT table_name FROM litespread_table')[0].values;
+  rows = doc.db.exec('SELECT table_name FROM litespread_table')[0].values;
   expect(rows[0]).toEqual(['employee']);
 
-  rows = db.exec('SELECT table_name, name, position FROM litespread_column')[0]
+  rows = doc.db.exec('SELECT table_name, name, position FROM litespread_column')[0]
     .values;
   expect(rows[0]).toEqual(['employee', 'name', 0]);
   expect(rows[1]).toEqual(['employee', 'department_id', 1]);
 });
 
 it('changeColumnName', () => {
-  const db = createTestDB();
-  ls.importDocument(db);
-  const table = ls.getTableDesc(db, 'employee');
+  const doc = createTestDoc();
+  const table = doc.tables[0];
 
   function testChange(colIndex, newName, expected) {
-    ls.changeColumnName(db, table, colIndex, newName, true);
-    const table_sql = db.exec(
+    ls.changeColumnName(doc.db, table, colIndex, newName, true);
+    const table_sql = doc.db.exec(
       "SELECT sql FROM sqlite_master WHERE name = 'employee'"
     )[0].values[0][0];
     expect(table_sql).toEqual(expected);
     expect(
-      db.exec(`
+      doc.db.exec(`
                     SELECT count(*) FROM litespread_column
                     WHERE name = '${newName}' AND table_name = '${
         table.name
       }'`)[0].values[0][0]
     ).toEqual(1);
-    db.exec('ROLLBACK');
+    doc.db.exec('ROLLBACK');
   }
   testChange(0, 'emp_name', 'CREATE TABLE employee (emp_name,department_id)');
   testChange(1, 'department', 'CREATE TABLE employee (name,department)');
 
-  ls.updateDocument(db);
+  ls.updateDocument(doc.db);
 });
 
 it('addColumn', () => {
-  const db = createTestDB();
-  ls.importDocument(db);
-  ls.addColumn(db, 'employee', 'employed_since');
+  const doc = createTestDoc();
+  ls.addColumn(doc.db, 'employee', 'employed_since');
 
-  let rows = db.exec(`
+  let rows = doc.db.exec(`
         SELECT name FROM litespread_column
         WHERE table_name ='employee' ORDER BY position
     `)[0].values;
@@ -79,7 +88,7 @@ it('addColumn', () => {
   expect(rows[1]).toEqual(['department_id']);
   expect(rows[2]).toEqual(['employed_since']);
 
-  ls.updateDocument(db);
+  ls.updateDocument(doc.db);
 });
 
 it('import1', () => {
@@ -105,9 +114,9 @@ it('moveColumn', () => {
               col3 int
           );
       `);
-    ls.importDocument(db);
-    ls.moveColumn(db, 'example', from, to);
-    let rows = db.exec(`
+    const doc = new ls.Document(db);
+    ls.moveColumn(doc.db, 'example', from, to);
+    let rows = doc.db.exec(`
           SELECT name, position FROM litespread_column
           WHERE table_name ='example' ORDER BY position
       `)[0].values;
@@ -128,13 +137,13 @@ it('moveRow', () => {
               value int
           );
       `);
-    ls.importDocument(db);
-    db.run(`
+    const doc = new ls.Document(db);
+    doc.db.run(`
         INSERT INTO example
         VALUES (0), (1), (2), (3)
     `);
-    ls.moveRow(db, 'example', from, to);
-    let rows = db.exec(`
+    ls.moveRow(doc.db, 'example', from, to);
+    let rows = doc.db.exec(`
           SELECT rowid, value FROM example
           ORDER BY rowid
       `)[0].values;
@@ -152,12 +161,11 @@ it('moveRow', () => {
 });
 
 it('rename new column', () => {
-  const db = createTestDB();
-  ls.importDocument(db);
-  ls.addColumn(db, 'employee', 'employed_since');
-  const table = ls.getTableDesc(db, 'employee');
-  ls.changeColumnName(db, table, 2, 'work_start');
-  ls.updateDocument(db);
+  const doc = createTestDoc();
+  ls.addColumn(doc.db, 'employee', 'employed_since');
+  const table = ls.getTableDesc(doc.db, 'employee');
+  ls.changeColumnName(doc.db, table, 2, 'work_start');
+  ls.updateDocument(doc.db);
 });
 
 it('sortRowids', () => {
@@ -168,16 +176,15 @@ it('sortRowids', () => {
               value int
           );
       `);
-    ls.importDocument(db);
-    ls.updateDocument(db);
-    db.run(`
+    const doc = new ls.Document(db);
+    doc.db.run(`
         INSERT INTO example
         VALUES (0), (1), (2), (3)
     `);
-    const table = ls.getTableDesc(db, 'example');
+    const table = ls.getTableDesc(doc.db, 'example');
     table.setCol('order_by', orderBy);
     table.sortRowids();
-    let rows = db.exec(`
+    let rows = doc.db.exec(`
           SELECT rowid, value FROM example
           ORDER BY rowid
       `)[0].values;

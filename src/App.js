@@ -101,8 +101,7 @@ class Document extends React.PureComponent {
       );
     };
 
-    ls.importDocument(db);
-    ls.updateDocument(db);
+    const lsdoc = new ls.Document(db);
 
     const tables = db
       .exec('SELECT table_name FROM litespread_table')[0]
@@ -110,6 +109,7 @@ class Document extends React.PureComponent {
     window.db = db; // for debugging
     this.setState({
       db: db,
+      lsdoc: lsdoc,
       last_db_change: new Date(),
       tables: tables,
       current_table: tables[0]
@@ -205,7 +205,6 @@ class StartPage extends React.Component {
         INSERT INTO table1 (col1)
         VALUES (null), (null), (null);
     `);
-    ls.importDocument(db);
     const filename = 'new_file.sqlite3';
     remoteClient
       .add(filename, db.export().buffer)
