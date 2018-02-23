@@ -112,10 +112,9 @@ function make_formatted_view(db, table) {
 }
 
 function updateDocument(db) {
-  let tables = db
-    .exec('SELECT table_name FROM litespread_table')[0]
-    .values.map(row => row[0]);
-  tables = tables.map(t => getTableDesc(db, t));
+  let tables = db.getAsObjects(
+      'SELECT table_name FROM litespread_table');
+  tables = tables.map(t => new Table(db, t));
   tables.forEach(table => {
     make_raw_view(db, table);
     make_formatted_view(db, table);
@@ -231,36 +230,46 @@ function changeColumnName(db, table, colIndex, newName, skipCommit) {
   }
 }
 
-function getTableDesc(db, tableName) {
-  let columns = [];
-  db.each(
-    `
-            SELECT * FROM litespread_column
-            WHERE table_name = '${tableName}'
-        `,
-    [],
-    db_row => columns.push(db_row)
-  );
 
-  let table = db.getAsObject(`SELECT * FROM litespread_table WHERE table_name = '${tableName}'`);
+class Table {
+  constructor(db, tableRow) {
+    let columns = [];
+    db.each(
+      `
+              SELECT * FROM litespread_column
+              WHERE table_name = '${tableRow.table_name}'
+          `,
+      [],
+      db_row => columns.push(db_row)
+    );
 
-  return {
-    name: tableName,
-    columns: columns,
-    order_by: table.order_by,
-    hasFooter: columns.some(c => c.summary),
-    setCol: (col, val) => {
-      db.changeRow(
+    this.db = db;
+    this.name = tableRow.table_name;
+    this.columns = columns;
+    this.order_by = tableRow.order_by;
+    this.hasFooter = columns.some(c => c.summary);
+  }
+
+  setCol(col, val) {
+      this.db.changeRow(
         `
                     UPDATE litespread_table
                        SET ${col} = ?
                     WHERE table_name = ?
                 `,
-        [val, tableName]
+        [val, this.name]
       );
-    },
-    sortRowids: () => {sortRowids(db, tableName)},
-  };
+  }
+
+  sortRowids() {
+    sortRowids(this.db, this.name)
+  }
+}
+
+function getTableDesc(db, tableName) {
+  let table = db.getAsObject(`SELECT * FROM litespread_table WHERE table_name = '${tableName}'`);
+
+  return new Table(db, table);
 }
 
 

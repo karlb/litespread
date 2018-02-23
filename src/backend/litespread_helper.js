@@ -63,10 +63,21 @@ function addDbMethods(db) {
     }
 
     db.getAsObject = (sqlStmt, params) => {
-      const stmt = db.prepare(sqlStmt)
+      const stmt = db.prepare(sqlStmt);
       const obj = stmt.getAsObject(params || {});
       stmt.free();
       return obj;
+    }
+
+    db.getAsObjects = (sqlStmt, params) => {
+      const stmt = db.prepare(sqlStmt);
+      const results = [];
+      stmt.bind(params);
+      while (stmt.step()) {
+        results.push(stmt.getAsObject());
+      }
+      stmt.free();
+      return results;
     }
 }
 
