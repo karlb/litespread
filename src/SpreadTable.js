@@ -8,7 +8,7 @@ import {
   EditableName,
   TableLoadingOption
 } from '@blueprintjs/table';
-import { EditableText, Menu, MenuItem, Callout, MenuDivider, Button, ButtonGroup } from '@blueprintjs/core';
+import { EditableText, Menu, MenuItem, Callout, MenuDivider, Button, ButtonGroup, Icon } from '@blueprintjs/core';
 import * as ls from './backend/litespread.js';
 import '@blueprintjs/table/lib/css/table.css';
 import colTypes from './col-types.js';
@@ -186,7 +186,7 @@ class SpreadTable extends React.PureComponent {
             onClick={() => column.setCol('summary', 'avg')}
           />
         </MenuItem>
-        <MenuItem icon="sort-asc" text="Order by">
+        <MenuItem icon="sort" text="Order by">
           <MenuItem
             icon="sort-asc"
             text={column.name + ' ascending'}
@@ -359,9 +359,23 @@ class SpreadTable extends React.PureComponent {
       col.setCol('formula', formula);
       this.props.onSchemaChange();
     };
+
+    // sort
+    const orderBy = this.state.table.order_by;
+    let sort;
+    if (orderBy === col.name + ' ASC') {
+      sort = 'asc';
+    }
+    if (orderBy === col.name + ' DESC') {
+      sort = 'desc';
+    }
+
     return (
       <ColumnHeaderCell
-        name={this.state.table.columns[colIndex].name}
+        name={<span>
+          {this.state.table.columns[colIndex].name}
+          {sort && <Icon icon={'sort-' + sort} style={{marginLeft: '5px'}} />}
+        </span>}
         menuRenderer={() => this.renderHeaderMenu(this.state.table, col)}
         nameRenderer={this.nameRenderer}
       >
