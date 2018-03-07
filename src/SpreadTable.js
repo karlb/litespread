@@ -228,7 +228,7 @@ class SpreadTable extends React.PureComponent {
       return null;
     }
     return (
-      <React.Fragment>
+      <div>
         <div className="pt-button-group">
           <a
             className="pt-button pt-icon-add-column-right"
@@ -307,7 +307,7 @@ class SpreadTable extends React.PureComponent {
             {this.state.loadingError}
           </Callout>
         )}
-      </React.Fragment>
+      </div>
     );
   }
 

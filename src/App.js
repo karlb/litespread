@@ -4,8 +4,7 @@ import * as ls from './backend/litespread.js';
 import SQL from 'sql.js';
 import SpreadTable from './SpreadTable.js';
 import {
-  Tab,
-  Tabs,
+  Tree,
   FocusStyleManager,
   Navbar,
   NavbarGroup,
@@ -112,7 +111,7 @@ class Document extends React.PureComponent {
       lsdoc: lsdoc,
       last_db_change: new Date(),
       tables: tables,
-      current_table: tables[0]
+      currentTable: tables[0]
     });
   };
 
@@ -149,33 +148,51 @@ class Document extends React.PureComponent {
   };
 
   render() {
+    const tableNodes = 
+      this.state.tables.map((table_name, tableIndex) => (
+        {
+          id: 'table-' + tableIndex,
+          label: table_name,
+          type: 'table',
+          depth: 1,
+          path: [0, tableIndex],
+          isSelected: table_name === this.state.currentTable,
+        }
+      ));
+
     return (
       <div className="App">
         <MainNavbar doc={this} />
-        <Tabs
-          id="TableTabs"
-          defaultSelectedTabId="table-tab-0"
-          vertical={true}
-          //renderActiveTabPanelOnly={true}
-        >
-          {this.state.tables.map((table_name, tableIndex) => (
-            <Tab
-              id={'table-tab-' + tableIndex}
-              title={table_name}
-              key={tableIndex}
-              panel={
-                <SpreadTable
-                  db={this.state.db}
-                  tableName={table_name}
-                  key={table_name}
-                  last_db_change={this.state.last_db_change}
-                  onDataChange={this.onDataChange}
-                  onSchemaChange={this.onSchemaChange}
-                />
+        <div style={{display: 'flex', flexDirection: 'row'}}>
+          <Tree
+            onNodeClick={(node) => {
+              if (node.type === 'table') {
+                this.setState({currentTable: node.label});
               }
+            }}
+            contents={[
+              {
+                id: 'tables-section',
+                label: 'Tables',
+                depth: 0,
+                path: 0,
+                isExpanded: true,
+                hasCaret: false,
+                childNodes: tableNodes,
+              },
+            ]}
+          />
+          {this.state.currentTable &&
+            <SpreadTable
+              db={this.state.db}
+              tableName={this.state.currentTable}
+              key={this.state.currentTable}
+              last_db_change={this.state.last_db_change}
+              onDataChange={this.onDataChange}
+              onSchemaChange={this.onSchemaChange}
             />
-          ))}
-        </Tabs>
+          }
+        </div>
       </div>
     );
   }
