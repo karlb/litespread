@@ -240,6 +240,11 @@ class Document {
     this.tables = db.getAsObjects('SELECT * FROM litespread_table')
       .map(t => new Table(db, t));
   }
+
+  importAndUpdate() {
+    importDocument(this.db);
+    updateDocument(this.db);
+  }
 }
 
 

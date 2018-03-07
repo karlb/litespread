@@ -45,6 +45,15 @@ function loadAsDb(dataPromise, filename) {
   }
 }
 
+
+function createDummyTable(db) {
+    db.run(`
+        CREATE TABLE table1 (col1, col2, col3);
+        INSERT INTO table1 (col1)
+        VALUES (null), (null), (null);
+    `);
+}
+
 class Document extends React.PureComponent {
   constructor(props, context) {
     super(props, context);
@@ -179,6 +188,14 @@ class Document extends React.PureComponent {
                 isExpanded: true,
                 hasCaret: false,
                 childNodes: tableNodes,
+                secondaryLabel: <Button
+                  icon="add"
+                  onClick={() => {
+                    createDummyTable(this.state.db);
+                    this.state.lsdoc.importAndUpdate();
+                    this.onSchemaChange();
+                  }}
+                />
               },
             ]}
           />
@@ -217,11 +234,7 @@ class StartPage extends React.Component {
 
   newFile = event => {
     const db = new SQL.Database();
-    db.run(`
-        CREATE TABLE table1 (col1, col2, col3);
-        INSERT INTO table1 (col1)
-        VALUES (null), (null), (null);
-    `);
+    createDummyTable(db);
     const filename = 'new_file.sqlite3';
     remoteClient
       .add(filename, db.export().buffer)
