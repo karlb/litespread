@@ -295,6 +295,14 @@ class Column {
       [val, this.table_name, this.name]
     );
   }
+
+  updateData(updateSql) {
+    this.db.run(`
+          UPDATE ${this.table_name}
+          SET ${this.name} = ${updateSql}
+      `
+    );
+  }
 }
 
 function getTableDesc(db, tableName) {

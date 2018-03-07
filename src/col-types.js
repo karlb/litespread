@@ -2,7 +2,7 @@ import * as moment from 'moment';
 
 let colTypes = {
   generic: {
-    name: 'Generic',
+    name: 'Text',
     icon: 'blank',
     align: 'left',
     className: '',
