@@ -17,8 +17,7 @@ class SpreadTable extends React.PureComponent {
   constructor(props, context) {
     super(props, context);
     this.state = {
-      rows: [],
-      table: null
+      rows: []
     };
   }
 
@@ -31,7 +30,7 @@ class SpreadTable extends React.PureComponent {
   updateFromDb(db) {
     let result;
     try {
-      result = db.exec(`SELECT * FROM ${this.props.tableName}_formatted`);
+      result = db.exec(`SELECT * FROM ${this.props.table.name}_formatted`);
     } catch (e) {
       this.setState({
         loadingOptions: [TableLoadingOption.CELLS],
@@ -43,20 +42,19 @@ class SpreadTable extends React.PureComponent {
 
     this.setState({
       rows: rows,
-      table: ls.getTableDesc(db, this.props.tableName),
       loadingOptions: [],
       loadingError: null
     });
   }
 
   onCellChange = (value, rowIndex, colIndex) => {
-    const col = this.state.table.columns[colIndex];
+    const col = this.props.table.columns[colIndex];
     const validator = colTypes[col.format || 'generic'].validator;
     value = validator(value);
     let row = this.state.rows[rowIndex];
     let sql = `
-                UPDATE ${this.props.tableName}
-                SET ${this.state.table.columns[colIndex].name} = '${value}'
+                UPDATE ${this.props.table.name}
+                SET ${this.props.table.columns[colIndex].name} = '${value}'
                 WHERE _rowid_ = ${row[0]}
         `;
     this.props.db.exec(sql);
@@ -64,7 +62,7 @@ class SpreadTable extends React.PureComponent {
   };
 
   changeColumnName = (colIndex, newName) => {
-    ls.changeColumnName(this.props.db, this.state.table, colIndex, newName);
+    ls.changeColumnName(this.props.db, this.props.table, colIndex, newName);
     this.props.onSchemaChange();
   };
 
@@ -79,8 +77,8 @@ class SpreadTable extends React.PureComponent {
 
   addRow = () => {
     let sql = `
-                INSERT INTO ${this.props.tableName}(${
-      this.state.table.columns[0].name
+                INSERT INTO ${this.props.table.name}(${
+      this.props.table.columns[0].name
     })
                 VALUES (null);
         `;
@@ -89,7 +87,7 @@ class SpreadTable extends React.PureComponent {
   };
 
   addColumn = () => {
-    ls.addColumn(this.props.db, this.props.tableName, 'new_col');
+    ls.addColumn(this.props.db, this.props.table.name, 'new_col');
     this.props.onSchemaChange();
   };
 
@@ -102,7 +100,7 @@ class SpreadTable extends React.PureComponent {
                     (SELECT max(position) + 1 FROM litespread_column WHERE table_name = :table_name)
                 )
             `,
-      { ':table_name': this.props.tableName },
+      { ':table_name': this.props.table.name },
       1
     );
     this.props.onSchemaChange();
@@ -261,7 +259,7 @@ class SpreadTable extends React.PureComponent {
           onColumnsReordered={(oldIndex, newIndex, length) => {
             ls.moveColumn(
               this.props.db,
-              this.props.tableName,
+              this.props.table.name,
               oldIndex,
               newIndex
             );
@@ -270,14 +268,14 @@ class SpreadTable extends React.PureComponent {
           enableColumnInteractionBar={true}
           enableRowReordering={true}
           onRowsReordered={(oldIndex, newIndex, length) => {
-            if (this.state.table.order_by) {
-              this.state.table.sortRowids();
-              this.state.table.setCol('order_by', null);  // manual sorting
+            if (this.props.table.order_by) {
+              this.props.table.sortRowids();
+              this.props.table.setCol('order_by', null);  // manual sorting
               this.props.onSchemaChange();
             }
             ls.moveRow(
               this.props.db,
-              this.props.tableName,
+              this.props.table.name,
               oldIndex,
               newIndex
             );
@@ -287,13 +285,13 @@ class SpreadTable extends React.PureComponent {
           enableMultipleSelection={false}
           loadingOptions={this.state.loadingOptions}
           onColumnWidthChanged={(colIndex, width) => {
-            console.log(this.state.table.columns[colIndex].setCol);
-            this.state.table.columns[colIndex].setCol('width', width)
+            console.log(this.props.table.columns[colIndex].setCol);
+            this.props.table.columns[colIndex].setCol('width', width)
           }}
-          columnWidths={this.state.table.columns.map(c => c.width)}
+          columnWidths={this.props.table.columns.map(c => c.width)}
           className="spreadtable"
         >
-          {this.state.table.columns.map((col, colIndex) => (
+          {this.props.table.columns.map((col, colIndex) => (
             <Column
               key={col.name}
               name={col.name}
@@ -312,7 +310,7 @@ class SpreadTable extends React.PureComponent {
   }
 
   cellRenderer = (rowIndex, colIndex) => {
-    const col = this.state.table.columns[colIndex];
+    const col = this.props.table.columns[colIndex];
     const colType = colTypes[col.format] || 'generic';
     const { align, className } = colType;
     let classNames = {
@@ -321,7 +319,7 @@ class SpreadTable extends React.PureComponent {
       [className]: true
     };
     const value = this.state.rows[rowIndex][colIndex + 1];
-    if (this.state.table.hasFooter && rowIndex === this.state.rows.length - 1) {
+    if (this.props.table.hasFooter && rowIndex === this.state.rows.length - 1) {
       classNames['footer'] = true;
       if (col.summary) {
         const summary = <span className="summary">({col.summary})</span>;
@@ -364,14 +362,14 @@ class SpreadTable extends React.PureComponent {
   };
 
   columnHeaderCellRenderer = colIndex => {
-    const col = this.state.table.columns[colIndex];
+    const col = this.props.table.columns[colIndex];
     const onFormulaChange = (col, formula) => {
       col.setCol('formula', formula);
       this.props.onSchemaChange();
     };
 
     // sort
-    const orderBy = this.state.table.order_by;
+    const orderBy = this.props.table.order_by;
     let sort;
     if (orderBy === col.name + ' ASC') {
       sort = 'asc';
@@ -383,10 +381,10 @@ class SpreadTable extends React.PureComponent {
     return (
       <ColumnHeaderCell
         name={<span>
-          {this.state.table.columns[colIndex].name}
+          {this.props.table.columns[colIndex].name}
           {sort && <Icon icon={'sort-' + sort} style={{marginLeft: '5px'}} />}
         </span>}
-        menuRenderer={() => this.renderHeaderMenu(this.state.table, col)}
+        menuRenderer={() => this.renderHeaderMenu(this.props.table, col)}
         nameRenderer={this.nameRenderer}
       >
         {col.formula && (

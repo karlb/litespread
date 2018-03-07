@@ -61,7 +61,6 @@ class Document extends React.PureComponent {
     this.state = {
       db: null,
       last_db_change: null,
-      tables: []
     };
   }
 
@@ -110,17 +109,13 @@ class Document extends React.PureComponent {
     };
 
     const lsdoc = new ls.Document(db);
-
-    const tables = db
-      .exec('SELECT table_name FROM litespread_table')[0]
-      .values.map(row => row[0]);
     window.db = db; // for debugging
+
     this.setState({
       db: db,
       lsdoc: lsdoc,
       last_db_change: new Date(),
-      tables: tables,
-      currentTable: tables[0]
+      currentTable: lsdoc.tables[0].name
     });
   };
 
@@ -157,15 +152,19 @@ class Document extends React.PureComponent {
   };
 
   render() {
+    if (!this.state.lsdoc) {
+      return null;
+    }
+
     const tableNodes = 
-      this.state.tables.map((table_name, tableIndex) => (
+      this.state.lsdoc.tables.map((table, tableIndex) => (
         {
           id: 'table-' + tableIndex,
-          label: table_name,
+          label: table.name,
           type: 'table',
           depth: 1,
           path: [0, tableIndex],
-          isSelected: table_name === this.state.currentTable,
+          isSelected: table.name === this.state.currentTable,
         }
       ));
 
@@ -199,16 +198,16 @@ class Document extends React.PureComponent {
               },
             ]}
           />
-          {this.state.currentTable &&
-            <SpreadTable
-              db={this.state.db}
-              tableName={this.state.currentTable}
-              key={this.state.currentTable}
-              last_db_change={this.state.last_db_change}
-              onDataChange={this.onDataChange}
-              onSchemaChange={this.onSchemaChange}
-            />
-          }
+          <SpreadTable
+            db={this.state.db}
+            table={this.state.lsdoc.tables.filter(
+                t => t.name === this.state.currentTable)[0]
+            }
+            key={this.state.currentTable}
+            last_db_change={this.state.last_db_change}
+            onDataChange={this.onDataChange}
+            onSchemaChange={this.onSchemaChange}
+          />
         </div>
       </div>
     );
