@@ -28,8 +28,7 @@ function createTestDoc() {
 
 it('updateDocument', () => {
   const db = createTestDB();
-  ls.importDocument(db);
-  ls.updateDocument(db);
+  new ls.Document(db)
   // const filename = '../test.sqlite3';
   // const filebuffer = fs.readFileSync(filename);
   // const db = new sql.Database(filebuffer);

@@ -157,16 +157,24 @@ class Document extends React.PureComponent {
     }
 
     const tableNodes = 
-      this.state.lsdoc.tables.map((table, tableIndex) => (
-        {
+      this.state.lsdoc.tables.map((table, tableIndex) => {
+        const selected = table.name === this.state.currentTable;
+        return {
           id: 'table-' + tableIndex,
           label: table.name,
           type: 'table',
           depth: 1,
           path: [0, tableIndex],
-          isSelected: table.name === this.state.currentTable,
+          isSelected: selected,
+          secondaryLabel: selected && <Button
+            icon="trash"
+            className="pt-minimal"
+            onClick={() => {
+              table.drop();
+            }}
+          />
         }
-      ));
+      });
 
     return (
       <div className="App">
@@ -191,7 +199,7 @@ class Document extends React.PureComponent {
                   icon="add"
                   onClick={() => {
                     createDummyTable(this.state.db);
-                    this.state.lsdoc.importAndUpdate();
+                    this.state.lsdoc.importTable('table1');
                     this.onSchemaChange();
                   }}
                 />

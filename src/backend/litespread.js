@@ -141,71 +141,6 @@ function upgradeDocument(db) {
   upgradeDocument(db);
 }
 
-function importDocument(db) {
-  // VACUUM makes all rowids sequential, which is currently required for sorting
-  db.run('VACUUM main');
-  helper.addDbMethods(db);
-  if (
-    db.exec(
-      "SELECT count(*) FROM sqlite_master WHERE name = 'litespread_document'"
-    )[0].values[0][0]
-  ) {
-    upgradeDocument(db);
-    return;
-  }
-  db.run(`
-        CREATE TABLE IF NOT EXISTS litespread_document (
-            api_version int NOT NULL,
-            author text,
-            license text,
-            description text
-        );
-    `);
-  db.run('INSERT INTO litespread_document(api_version) VALUES (?)', [
-    LATEST_VERSION
-  ]);
-  db.run(`
-        CREATE TABLE IF NOT EXISTS litespread_table (
-            table_name text NOT NULL PRIMARY KEY,
-            description text,
-            order_by text
-        );
-        INSERT INTO litespread_table(table_name)
-        SELECT DISTINCT name
-        FROM sqlite_master
-        WHERE type = 'table'
-          AND name NOT LIKE 'litespread_%';
-    `);
-  db.run(`
-        CREATE TABLE IF NOT EXISTS litespread_column (
-            table_name text NOT NULL,
-            name text NOT NULL,
-            position int NOT NULL,
-            format text,
-            summary text,
-            formula text,
-            description text,
-            width float,
-            precision int,
-            PRIMARY KEY (table_name, name)
-        );
-        CREATE UNIQUE INDEX litespread_column_unique_position
-          ON litespread_column(table_name, position);
-    `);
-  var col_insert = db.prepare(`
-        INSERT INTO litespread_column(table_name, name, position)
-        VALUES (?, ?, ?)
-    `);
-  db.each('SELECT table_name FROM litespread_table', [], ({ table_name }) => {
-    db.each(`PRAGMA table_info(${table_name})`, [], ({ cid, name }) => {
-      col_insert.run([table_name, name, cid]);
-    });
-  });
-
-  if (db.exec('SELECT count(*) FROM litespread_table')[0].values[0][0] === 0) {
-    throw new Error('Invalid file or no tables found.');
-  }
-}
 
 // skipCommit is useful for tests
 function changeColumnName(db, table, colIndex, newName, skipCommit) {
@@ -232,18 +167,89 @@ function changeColumnName(db, table, colIndex, newName, skipCommit) {
 
 
 class Document {
-  constructor(db) {
-    importDocument(db);
-    updateDocument(db);
 
+  constructor(db) {
+    helper.addDbMethods(db);
     this.db = db;
+    this.importAll();
     this.tables = db.getAsObjects('SELECT * FROM litespread_table')
       .map(t => new Table(db, t));
+    updateDocument(db);
   }
 
-  importAndUpdate() {
-    importDocument(this.db);
-    updateDocument(this.db);
+  importTable(tableName) {
+    this.db.run(
+      "INSERT INTO litespread_table(table_name) VALUES (?)",
+      [tableName]
+    );
+    const col_insert = this.db.prepare(`
+          INSERT INTO litespread_column(table_name, name, position)
+          VALUES (?, ?, ?)
+      `);
+    this.db.each(`PRAGMA table_info(${tableName})`, [], ({ cid, name }) => {
+      col_insert.run([tableName, name, cid]);
+    });
+  }
+
+  importAll() {
+    // VACUUM makes all rowids sequential, which is currently required for sorting
+    this.db.run('VACUUM main');
+    if (
+      this.db.exec(
+        "SELECT count(*) FROM sqlite_master WHERE name = 'litespread_document'"
+      )[0].values[0][0]
+    ) {
+      upgradeDocument(this.db);
+      return;
+    }
+    this.db.run(`
+          CREATE TABLE IF NOT EXISTS litespread_document (
+              api_version int NOT NULL,
+              author text,
+              license text,
+              description text
+          );
+      `);
+    this.db.run('INSERT INTO litespread_document(api_version) VALUES (?)', [
+      LATEST_VERSION
+    ]);
+    this.db.run(`
+          CREATE TABLE IF NOT EXISTS litespread_table (
+              table_name text NOT NULL PRIMARY KEY,
+              description text,
+              order_by text
+          );
+      `);
+    this.db.run(`
+          CREATE TABLE IF NOT EXISTS litespread_column (
+              table_name text NOT NULL REFERENCES litespread_table(table_name) ON DELETE CASCADE,
+              name text NOT NULL,
+              position int NOT NULL,
+              format text,
+              summary text,
+              formula text,
+              description text,
+              width float,
+              precision int,
+              PRIMARY KEY (table_name, name)
+          );
+          CREATE UNIQUE INDEX litespread_column_unique_position
+            ON litespread_column(table_name, position);
+      `);
+    this.db.each(`
+        SELECT DISTINCT name AS table_name
+        FROM sqlite_master
+        WHERE type = 'table'
+          AND name NOT LIKE 'litespread_%'
+        `, [],
+        ({ table_name }) => {
+          this.importTable(table_name);
+        }
+    );
+
+    if (this.db.exec('SELECT count(*) FROM litespread_table')[0].values[0][0] === 0) {
+      throw new Error('Invalid file or no tables found.');
+    }
   }
 }
 
@@ -280,6 +286,13 @@ class Table {
 
   sortRowids() {
     sortRowids(this.db, this.name)
+  }
+
+  drop() {
+    this.db.run(`
+        DROP TABLE ${this.name};
+        DELETE FROM litespread_table WHERE name = '${this.name}';
+    `);
   }
 }
 
@@ -459,7 +472,6 @@ function toSafeName(name) {
 
 export {
   updateDocument,
-  importDocument,
   importParsedJson,
   changeColumnName,
   getTableDesc,
