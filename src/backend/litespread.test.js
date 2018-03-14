@@ -72,7 +72,7 @@ it('changeColumnName', () => {
   testChange(0, 'emp_name', 'CREATE TABLE employee (emp_name,department_id)');
   testChange(1, 'department', 'CREATE TABLE employee (name,department)');
 
-  ls.updateDocument(doc.db);
+  doc.update();
 });
 
 it('addColumn', () => {
@@ -87,7 +87,7 @@ it('addColumn', () => {
   expect(rows[1]).toEqual(['department_id']);
   expect(rows[2]).toEqual(['employed_since']);
 
-  ls.updateDocument(doc.db);
+  doc.update();
 });
 
 it('import1', () => {
@@ -164,7 +164,7 @@ it('rename new column', () => {
   ls.addColumn(doc.db, 'employee', 'employed_since');
   const table = ls.getTableDesc(doc.db, 'employee');
   ls.changeColumnName(doc.db, table, 2, 'work_start');
-  ls.updateDocument(doc.db);
+  doc.update();
 });
 
 it('sortRowids', () => {

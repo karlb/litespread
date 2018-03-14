@@ -131,7 +131,7 @@ class Document extends React.PureComponent {
   };
 
   onSchemaChange = () => {
-    ls.updateDocument(this.state.db);
+    this.state.lsdoc.update();
     this.setState({ last_db_change: new Date() });
     this.save();
   };
@@ -166,11 +166,13 @@ class Document extends React.PureComponent {
           depth: 1,
           path: [0, tableIndex],
           isSelected: selected,
-          secondaryLabel: selected && <Button
+          secondaryLabel: selected && this.state.lsdoc.tables.length > 1 && <Button
             icon="trash"
             className="pt-minimal"
             onClick={() => {
               table.drop();
+              this.onSchemaChange();
+              this.setState({currentTable: this.lsdoc.tables[0].name})
             }}
           />
         }

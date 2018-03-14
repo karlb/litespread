@@ -111,15 +111,6 @@ function make_formatted_view(db, table) {
   db.run(script);
 }
 
-function updateDocument(db) {
-  let tables = db.getAsObjects(
-      'SELECT * FROM litespread_table');
-  tables = tables.map(t => new Table(db, t));
-  tables.forEach(table => {
-    make_raw_view(db, table);
-    make_formatted_view(db, table);
-  });
-}
 
 function upgradeDocument(db) {
   const api_version = db.exec('SELECT api_version FROM litespread_document')[0]
@@ -172,9 +163,7 @@ class Document {
     helper.addDbMethods(db);
     this.db = db;
     this.importAll();
-    this.tables = db.getAsObjects('SELECT * FROM litespread_table')
-      .map(t => new Table(db, t));
-    updateDocument(db);
+    this.update();
   }
 
   importTable(tableName) {
@@ -251,6 +240,15 @@ class Document {
       throw new Error('Invalid file or no tables found.');
     }
   }
+
+  update() {
+    this.tables = this.db.getAsObjects('SELECT * FROM litespread_table')
+      .map(t => new Table(this.db, t));
+    this.tables.forEach(table => {
+      make_raw_view(this.db, table);
+      make_formatted_view(this.db, table);
+    });
+  }
 }
 
 
@@ -291,7 +289,7 @@ class Table {
   drop() {
     this.db.run(`
         DROP TABLE ${this.name};
-        DELETE FROM litespread_table WHERE name = '${this.name}';
+        DELETE FROM litespread_table WHERE table_name = '${this.name}';
     `);
   }
 }
@@ -471,7 +469,6 @@ function toSafeName(name) {
 }
 
 export {
-  updateDocument,
   importParsedJson,
   changeColumnName,
   getTableDesc,
