@@ -161,8 +161,13 @@ class Document extends React.PureComponent {
         const selected = table.name === this.state.currentTable;
         return {
           id: 'table-' + tableIndex,
-          label: table.name,
-          type: 'table',
+          label: <EditableText defaultValue={table.name} onConfirm={name => {
+            if (table.name === name) {return}
+            table.rename(name);
+            this.setState({currentTable: name});
+            this.onSchemaChange();
+          }} />,
+          table: table,
           depth: 1,
           path: [0, tableIndex],
           isSelected: selected,
@@ -178,14 +183,20 @@ class Document extends React.PureComponent {
         }
       });
 
+    const currentTableObj = this.state.lsdoc.tables.filter(
+                t => t.name === this.state.currentTable)[0];
+    if (!currentTableObj) {
+      throw Error(`Could not find table ${this.state.currentTable}`);
+    }
+
     return (
       <div className="App">
         <MainNavbar doc={this} />
         <div style={{display: 'flex', flexDirection: 'row'}}>
           <Tree
             onNodeClick={(node) => {
-              if (node.type === 'table') {
-                this.setState({currentTable: node.label});
+              if (node.table) {
+                this.setState({currentTable: node.table.name});
               }
             }}
             contents={[
@@ -210,9 +221,7 @@ class Document extends React.PureComponent {
           />
           <SpreadTable
             db={this.state.db}
-            table={this.state.lsdoc.tables.filter(
-                t => t.name === this.state.currentTable)[0]
-            }
+            table={currentTableObj}
             key={this.state.currentTable}
             last_db_change={this.state.last_db_change}
             onDataChange={this.onDataChange}

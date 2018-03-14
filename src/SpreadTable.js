@@ -225,6 +225,9 @@ class SpreadTable extends React.PureComponent {
     if (this.props.db === null) {
       return null;
     }
+    if (!this.props.table) {
+      throw Error('No table selected!');
+    }
     return (
       <div>
         <div className="pt-button-group">

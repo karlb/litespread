@@ -167,6 +167,16 @@ it('rename new column', () => {
   doc.update();
 });
 
+it('rename table', () => {
+  const doc = createTestDoc();
+  const table = doc.tables[0];
+  table.rename('new_name')
+  doc.update();
+  const newTable = doc.tables[0];
+  expect(newTable.name).toEqual('new_name');
+  expect(newTable.columns.length).toEqual(table.columns.length);
+});
+
 it('sortRowids', () => {
   function checkResult(orderBy, result) {
     const db = new sql.Database();

@@ -292,6 +292,13 @@ class Table {
         DELETE FROM litespread_table WHERE table_name = '${this.name}';
     `);
   }
+
+  rename(newName) {
+    this.db.run(`ALTER TABLE ${this.name} RENAME TO ${newName}`);
+    const params = {':old': this.name, ':new': newName};
+    this.db.run("UPDATE litespread_table SET table_name = :new WHERE table_name = :old", params);
+    this.db.run("UPDATE litespread_column SET table_name = :new WHERE table_name = :old", params);
+  }
 }
 
 
