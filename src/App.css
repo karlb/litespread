@@ -65,3 +65,8 @@ body,
 .pt-tree {
   min-width: 200px;
 }
+
+/* Work around invisible text while editing. See https://github.com/palantir/blueprint/issues/2236 */
+.pt-tree .pt-editable-input {
+  color: black;
+}
