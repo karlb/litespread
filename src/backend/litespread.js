@@ -299,6 +299,13 @@ class Table {
     this.db.run("UPDATE litespread_table SET table_name = :new WHERE table_name = :old", params);
     this.db.run("UPDATE litespread_column SET table_name = :new WHERE table_name = :old", params);
   }
+
+  asJSON() {
+    return {
+      fields: this.columns.map(c => c.name),
+      data: this.db.exec(`SELECT * FROM ${this.name}_formatted`)[0].values,
+    }
+  }
 }
 
 

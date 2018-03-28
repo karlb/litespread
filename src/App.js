@@ -142,6 +142,21 @@ class Document extends React.PureComponent {
     FileSaver.saveAs(blob, this.filename);
   };
 
+  exportCSV = () => {
+    const currentTableObj = this.state.lsdoc.tables.filter(
+                t => t.name === this.state.currentTable)[0];
+    const json = currentTableObj.asJSON();
+
+    return import('papaparse').then(
+      Papa => {
+        const csv = Papa.unparse(json);
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const filename = this.filename.split('.')[0] + '.csv';
+        FileSaver.saveAs(blob, filename);
+      }
+    );
+  };
+
   rename = requestedName => {
     console.log(this.blob);
     remoteClient
@@ -370,6 +385,11 @@ const MainNavbar = props => {
           icon="download"
           text="Save to Disk"
           onClick={props.doc.saveFile}
+        />
+        <MenuItem
+          icon="export"
+          text="Export as CSV"
+          onClick={props.doc.exportCSV}
         />
         <MenuItem icon="folder-open" text="Synced Files">
           <MenuItem icon="blank" text="..." />
