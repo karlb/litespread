@@ -161,12 +161,15 @@ class Document extends React.PureComponent {
         const selected = table.name === this.state.currentTable;
         return {
           id: 'table-' + tableIndex,
-          label: <EditableText defaultValue={table.name} onConfirm={name => {
-            if (table.name === name) {return}
-            table.rename(name);
-            this.setState({currentTable: name});
-            this.onSchemaChange();
-          }} />,
+          label: <EditableText
+            defaultValue={table.name}
+            disabled={!selected}
+            onConfirm={name => {
+              if (table.name === name) {return}
+              table.rename(name);
+              this.setState({currentTable: name});
+              this.onSchemaChange();
+            }} />,
           table: table,
           depth: 1,
           path: [0, tableIndex],

@@ -55,22 +55,13 @@
 html,
 body,
 #root,
-.App,
-.pt-tabs,
-.pt-tab-panel {
+.App {
   height: 100%;
   display: flex;
   flex-direction: column;
   overflow: auto;
 }
 
-.pt-tabs {
-  display: flex;
-  flex-direction: row;
-}
-.pt-tab-list {
-  width: 10%;
-}
-.pt-tab-panel {
-  width: 90%;
+.pt-tree {
+  min-width: 200px;
 }
