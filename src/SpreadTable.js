@@ -181,7 +181,11 @@ class SpreadTable extends React.PureComponent {
           <MenuItem
             icon="blank"
             text="None"
-            onClick={() => column.setCol('summary', null)}
+            onClick={() => {
+              column.setCol('summary', null);
+              this.props.onSchemaChange();
+              this.props.onDataChange();
+            }}
           />
           <MenuItem
             icon="add"

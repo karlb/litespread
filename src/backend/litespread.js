@@ -165,6 +165,8 @@ class Document {
     this.db = db;
     this.importAll();
     this.update();
+    this.schemaChangeCallbacks = [];
+    this.dataChangeCallbacks = [];
   }
 
   importTable(tableName) {
@@ -244,17 +246,25 @@ class Document {
 
   update() {
     this.tables = this.db.getAsObjects('SELECT * FROM litespread_table')
-      .map(t => new Table(this.db, t));
+      .map(t => new Table(this.db, t, this));
     this.tables.forEach(table => {
       make_raw_view(this.db, table);
       make_formatted_view(this.db, table);
     });
   }
+
+  schemaChanged() {
+    this.schemaChangeCallbacks.forEach(c => c());
+  }
+
+  dataChanged() {
+    this.dataChangeCallbacks.forEach(c => c());
+  }
 }
 
 
 class Table {
-  constructor(db, tableRow) {
+  constructor(db, tableRow, doc) {
     let columns = [];
     db.each(
       `
@@ -263,10 +273,11 @@ class Table {
               ORDER BY position
           `,
       [],
-      db_row => columns.push(new Column(db, db_row))
+      db_row => columns.push(new Column(db, db_row, this))
     );
 
     this.db = db;
+    this.parent = doc;
     this.name = tableRow.table_name;
     this.columns = columns;
     this.order_by = tableRow.order_by;
@@ -314,17 +325,25 @@ class Table {
         `)[0].values,
     }
   }
+
+  schemaChanged() {
+    this.parent.schemaChanged();
+  }
+
+  dataChanged() {
+    this.parent.dataChanged();
+  }
 }
 
 
 class Column {
-  constructor(db, columnRow) {
+  constructor(db, columnRow, table) {
     Object.assign(this, columnRow);
     this.db = db;
+    this.parent = table;
   }
 
   setCol(col, val) {
-    console.log(col, val, this.table_name, this.name);
     this.db.changeRow(`
           UPDATE litespread_column SET ${col} = ?
           WHERE table_name = ?
@@ -332,6 +351,7 @@ class Column {
       `,
       [val, this.table_name, this.name]
     );
+    this.schemaChanged();
   }
 
   updateData(updateSql) {
@@ -340,6 +360,15 @@ class Column {
           SET ${this.name} = ${updateSql}
       `
     );
+    this.dataChanged();
+  }
+
+  schemaChanged() {
+    this.parent.schemaChanged();
+  }
+
+  dataChanged() {
+    this.parent.dataChanged();
   }
 }
 

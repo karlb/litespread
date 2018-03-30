@@ -98,6 +98,8 @@ class Document extends React.PureComponent {
 
   receiveDb = db => {
     const lsdoc = new ls.Document(db);
+    lsdoc.dataChangeCallbacks.push(this.onDataChange);
+    lsdoc.schemaChangeCallbacks.push(this.onSchemaChange);
     window.db = db; // for debugging
 
     this.setState({
@@ -123,6 +125,7 @@ class Document extends React.PureComponent {
   };
 
   onSchemaChange = () => {
+    console.log('schema changed');
     this.state.lsdoc.update();
     this.setState({ last_db_change: new Date() });
     this.save();
