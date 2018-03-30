@@ -260,6 +260,7 @@ class Table {
       `
               SELECT * FROM litespread_column
               WHERE table_name = '${tableRow.table_name}'
+              ORDER BY position
           `,
       [],
       db_row => columns.push(new Column(db, db_row))
@@ -304,9 +305,13 @@ class Table {
   }
 
   asJSON() {
+    const cols = this.columns.map(c => c.name)
     return {
-      fields: this.columns.map(c => c.name),
-      data: this.db.exec(`SELECT * FROM ${this.name}_formatted`)[0].values,
+      fields: cols,
+      data: this.db.exec(`
+          SELECT ${cols.join(', ')}
+          FROM ${this.name}_formatted
+        `)[0].values,
     }
   }
 }
