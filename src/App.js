@@ -71,6 +71,7 @@ class Document extends React.PureComponent {
   componentDidMount() {
     const self = this;
     if (this.props.match.params.location === 'files') {
+      console.log('Load from remotestorage ' + this.filename);
       remoteClient.getFile(this.filename).then(
         file => {
           const uInt8Array = new Uint8Array(file.data);
@@ -82,6 +83,7 @@ class Document extends React.PureComponent {
         }
       );
     } else {
+      console.log('Load from URL ' + this.filename);
       fetch(this.filename).then(result => {
         if (this.filename.endsWith('.csv')) {
           result = result.text();
@@ -95,19 +97,6 @@ class Document extends React.PureComponent {
   }
 
   receiveDb = db => {
-    // just a helper function
-    db.changeRows = (sqlStmt, params, expectedChanges) => {
-      const changes = db.run(sqlStmt, params).getRowsModified();
-      console.assert(
-        changes === expectedChanges,
-        'Got %i changes instead of %i in statement %s with params %s',
-        changes,
-        expectedChanges,
-        sqlStmt,
-        params
-      );
-    };
-
     const lsdoc = new ls.Document(db);
     window.db = db; // for debugging
 
@@ -122,6 +111,9 @@ class Document extends React.PureComponent {
   save = () => {
     if (this.props.match.params.location === 'files') {
       remoteClient.save(this.filename, this.state.db.export().buffer);
+      // Turn foreign keys back on which have been turned off during the
+      // export. See https://github.com/kripken/sql.js/issues/233
+      this.state.db.run('PRAGMA foreign_keys = ON');
     }
   };
 
@@ -171,9 +163,15 @@ class Document extends React.PureComponent {
       return null;
     }
 
+    let currentTableObj = this.state.lsdoc.tables.filter(
+                t => t.name === this.state.currentTable)[0];
+    if (!currentTableObj) {
+      currentTableObj = this.state.lsdoc.tables[0];
+    }
+
     const tableNodes = 
       this.state.lsdoc.tables.map((table, tableIndex) => {
-        const selected = table.name === this.state.currentTable;
+        const selected = table.name === currentTableObj.name;
         return {
           id: 'table-' + tableIndex,
           label: <EditableText
@@ -195,17 +193,10 @@ class Document extends React.PureComponent {
             onClick={() => {
               table.drop();
               this.onSchemaChange();
-              this.setState({currentTable: this.lsdoc.tables[0].name})
             }}
           />
         }
       });
-
-    const currentTableObj = this.state.lsdoc.tables.filter(
-                t => t.name === this.state.currentTable)[0];
-    if (!currentTableObj) {
-      throw Error(`Could not find table ${this.state.currentTable}`);
-    }
 
     return (
       <div className="App">
@@ -240,7 +231,7 @@ class Document extends React.PureComponent {
           <SpreadTable
             db={this.state.db}
             table={currentTableObj}
-            key={this.state.currentTable}
+            key={currentTableObj.name}
             last_db_change={this.state.last_db_change}
             onDataChange={this.onDataChange}
             onSchemaChange={this.onSchemaChange}
