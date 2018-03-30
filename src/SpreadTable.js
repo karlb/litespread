@@ -356,20 +356,7 @@ class SpreadTable extends React.PureComponent {
   };
 
   nameRenderer = (name, colIndex) => {
-    return (
-      <EditableName
-        name={name}
-        onConfirm={value => this.changeColumnName(colIndex, value)}
-      />
-    );
-  };
-
-  columnHeaderCellRenderer = colIndex => {
     const col = this.props.table.columns[colIndex];
-    const onFormulaChange = (col, formula) => {
-      col.setCol('formula', formula);
-      this.props.onSchemaChange();
-    };
 
     // sort
     const orderBy = this.props.table.order_by;
@@ -382,11 +369,26 @@ class SpreadTable extends React.PureComponent {
     }
 
     return (
+      <React.Fragment>
+        <EditableName
+          name={name}
+          onConfirm={value => this.changeColumnName(colIndex, value)}
+        />
+        {sort && <Icon icon={'sort-' + sort} style={{margin: '6px 4px'}} />}
+      </React.Fragment>
+    );
+  };
+
+  columnHeaderCellRenderer = colIndex => {
+    const col = this.props.table.columns[colIndex];
+    const onFormulaChange = (col, formula) => {
+      col.setCol('formula', formula);
+      this.props.onSchemaChange();
+    };
+
+    return (
       <ColumnHeaderCell
-        name={<span>
-          {this.props.table.columns[colIndex].name}
-          {sort && <Icon icon={'sort-' + sort} style={{marginLeft: '5px'}} />}
-        </span>}
+        name={this.props.table.columns[colIndex].name}
         menuRenderer={() => this.renderHeaderMenu(this.props.table, col)}
         nameRenderer={this.nameRenderer}
       >
