@@ -260,53 +260,55 @@ class SpreadTable extends React.PureComponent {
             Add Row
           </a>
         </div>
-        <Table
-          numRows={this.state.rows.length}
-          enableColumnReordering={true}
-          onColumnsReordered={(oldIndex, newIndex, length) => {
-            ls.moveColumn(
-              this.props.db,
-              this.props.table.name,
-              oldIndex,
-              newIndex
-            );
-            this.props.onSchemaChange();
-          }}
-          enableColumnInteractionBar={true}
-          enableRowReordering={true}
-          onRowsReordered={(oldIndex, newIndex, length) => {
-            if (this.props.table.order_by) {
-              this.props.table.sortRowids();
-              this.props.table.setCol('order_by', null);  // manual sorting
+        <div>
+          <Table
+            numRows={this.state.rows.length}
+            enableColumnReordering={true}
+            onColumnsReordered={(oldIndex, newIndex, length) => {
+              ls.moveColumn(
+                this.props.db,
+                this.props.table.name,
+                oldIndex,
+                newIndex
+              );
               this.props.onSchemaChange();
-            }
-            ls.moveRow(
-              this.props.db,
-              this.props.table.name,
-              oldIndex,
-              newIndex
-            );
-            this.props.onDataChange();
-          }}
-          enableFocusedCell={true}
-          enableMultipleSelection={false}
-          loadingOptions={this.state.loadingOptions}
-          onColumnWidthChanged={(colIndex, width) => {
-            console.log(this.props.table.columns[colIndex].setCol);
-            this.props.table.columns[colIndex].setCol('width', width)
-          }}
-          columnWidths={this.props.table.columns.map(c => c.width)}
-          className="spreadtable"
-        >
-          {this.props.table.columns.map((col, colIndex) => (
-            <Column
-              key={col.name}
-              name={col.name}
-              cellRenderer={this.cellRenderer}
-              columnHeaderCellRenderer={this.columnHeaderCellRenderer}
-            />
-          ))}
-        </Table>
+            }}
+            enableColumnInteractionBar={true}
+            enableRowReordering={true}
+            onRowsReordered={(oldIndex, newIndex, length) => {
+              if (this.props.table.order_by) {
+                this.props.table.sortRowids();
+                this.props.table.setCol('order_by', null);  // manual sorting
+                this.props.onSchemaChange();
+              }
+              ls.moveRow(
+                this.props.db,
+                this.props.table.name,
+                oldIndex,
+                newIndex
+              );
+              this.props.onDataChange();
+            }}
+            enableFocusedCell={true}
+            enableMultipleSelection={false}
+            loadingOptions={this.state.loadingOptions}
+            onColumnWidthChanged={(colIndex, width) => {
+              console.log(this.props.table.columns[colIndex].setCol);
+              this.props.table.columns[colIndex].setCol('width', width)
+            }}
+            columnWidths={this.props.table.columns.map(c => c.width)}
+            className="spreadtable"
+          >
+            {this.props.table.columns.map((col, colIndex) => (
+              <Column
+                key={col.name}
+                name={col.name}
+                cellRenderer={this.cellRenderer}
+                columnHeaderCellRenderer={this.columnHeaderCellRenderer}
+              />
+            ))}
+          </Table>
+        </div>
         {this.state.loadingError && (
           <Callout className="pt-intent-danger">
             {this.state.loadingError}
