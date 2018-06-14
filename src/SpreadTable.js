@@ -237,6 +237,14 @@ class SpreadTable extends React.PureComponent {
       <div>
         <div className="pt-button-group">
           <a
+            className="pt-button pt-icon-add-row-bottom"
+            tabIndex="0"
+            role="button"
+            onClick={this.addRow}
+          >
+            Add Row
+          </a>
+          <a
             className="pt-button pt-icon-add-column-right"
             tabIndex="0"
             role="button"
@@ -251,14 +259,6 @@ class SpreadTable extends React.PureComponent {
             onClick={this.addFormulaColumn}
           >
             Add Formula Column
-          </a>
-          <a
-            className="pt-button pt-icon-add-row-bottom"
-            tabIndex="0"
-            role="button"
-            onClick={this.addRow}
-          >
-            Add Row
           </a>
         </div>
         <div>
