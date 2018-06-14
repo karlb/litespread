@@ -122,6 +122,7 @@ class SpreadTable extends React.PureComponent {
           `ALTER TABLE ${column.table_name} DROP COLUMN ${column.name}`
         );
       }
+      this.props.onSchemaChange();
     };
     const changePrecision = (change) => {
       this.props.db.changeRows(
