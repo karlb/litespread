@@ -315,6 +315,18 @@ class Table {
     this.db.run('PRAGMA foreign_keys = ON');
   }
 
+  addColumn(colName) {
+    this.db.run(`
+      ALTER TABLE ${this.name} ADD COLUMN '${colName}';
+      INSERT INTO litespread_column(table_name, name, position)
+      VALUES ('${this.name}', '${colName}', (
+        SELECT max(position) + 1
+        FROM litespread_column
+        WHERE table_name = '${this.name}'
+      ));
+    `);
+  }
+
   asJSON() {
     const cols = this.columns.map(c => c.name)
     return {
@@ -396,18 +408,6 @@ function sortRowids(db, tableName) {
   });
 }
 
-
-function addColumn(db, tableName, colName) {
-  db.run(`
-        ALTER TABLE ${tableName} ADD COLUMN '${colName}';
-        INSERT INTO litespread_column(table_name, name, position)
-        VALUES ('${tableName}', '${colName}', (
-                SELECT max(position) + 1
-                FROM litespread_column
-                WHERE table_name = '${tableName}'
-            ));
-    `);
-}
 
 function moveColumn(db, tableName, fromPosition, toPosition) {
   // Since sqlite checks the unique constraint after every row and there is no
@@ -523,7 +523,6 @@ export {
   importParsedJson,
   changeColumnName,
   getTableDesc,
-  addColumn,
   moveColumn,
   moveRow,
   addFormulaColumn,

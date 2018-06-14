@@ -87,7 +87,7 @@ class SpreadTable extends React.PureComponent {
   };
 
   addColumn = () => {
-    ls.addColumn(this.props.db, this.props.table.name, 'new_col');
+    this.props.table.addColumn('new_col');
     this.props.onSchemaChange();
   };
 
