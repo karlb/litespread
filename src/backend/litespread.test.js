@@ -77,7 +77,8 @@ it('changeColumnName', () => {
 
 it('addColumn', () => {
   const doc = createTestDoc();
-  ls.addColumn(doc.db, 'employee', 'employed_since');
+  const table = doc.tables[0];
+  table.addColumn('employed_since');
 
   let rows = doc.db.exec(`
         SELECT name FROM litespread_column
@@ -161,8 +162,8 @@ it('moveRow', () => {
 
 it('rename new column', () => {
   const doc = createTestDoc();
-  ls.addColumn(doc.db, 'employee', 'employed_since');
-  const table = ls.getTableDesc(doc.db, 'employee');
+  const table = doc.tables[0];
+  table.addColumn('employed_since');
   ls.changeColumnName(doc.db, table, 2, 'work_start');
   doc.update();
 });
