@@ -42,6 +42,11 @@ const MainNavbar = props => {
           text="Export as CSV"
           onClick={props.doc.exportCSV}
         />
+        <MenuItem
+          icon="trash"
+          text="Delete File"
+          onClick={props.doc.deleteFile}
+        />
         <MenuItem icon="folder-open" text="Synced Files">
           <MenuItem icon="blank" text="..." />
         </MenuItem>

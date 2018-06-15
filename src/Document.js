@@ -123,6 +123,12 @@ class Document extends React.PureComponent {
     FileSaver.saveAs(blob, this.filename);
   };
 
+  deleteFile = () => {
+    this.props.remoteClient
+      .remove(this.filename)
+      .then(() => this.props.history.push('/'));
+  };
+
   exportCSV = () => {
     const currentTableObj = this.state.lsdoc.tables.filter(
       t => t.name === this.state.currentTable
