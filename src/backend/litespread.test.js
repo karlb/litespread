@@ -25,10 +25,9 @@ function createTestDoc() {
   return new ls.Document(db);
 }
 
-
 it('updateDocument', () => {
   const db = createTestDB();
-  new ls.Document(db)
+  new ls.Document(db);
   // const filename = '../test.sqlite3';
   // const filebuffer = fs.readFileSync(filename);
   // const db = new sql.Database(filebuffer);
@@ -44,8 +43,9 @@ it('importDocument', () => {
   rows = doc.db.exec('SELECT table_name FROM litespread_table')[0].values;
   expect(rows[0]).toEqual(['employee']);
 
-  rows = doc.db.exec('SELECT table_name, name, position FROM litespread_column')[0]
-    .values;
+  rows = doc.db.exec(
+    'SELECT table_name, name, position FROM litespread_column'
+  )[0].values;
   expect(rows[0]).toEqual(['employee', 'name', 0]);
   expect(rows[1]).toEqual(['employee', 'department_id', 1]);
 });
@@ -171,7 +171,7 @@ it('rename new column', () => {
 it('rename table', () => {
   const doc = createTestDoc();
   const table = doc.tables[0];
-  table.rename('new_name')
+  table.rename('new_name');
   doc.update();
   const newTable = doc.tables[0];
   expect(newTable.name).toEqual('new_name');

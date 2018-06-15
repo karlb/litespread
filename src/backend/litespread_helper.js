@@ -46,39 +46,39 @@ function findCols(formula) {
 ////////////////////// db methods /////////////////
 
 function addDbMethods(db) {
-    db.changeRows = (sqlStmt, params, expectedChanges) => {
-      const changes = db.run(sqlStmt, params).getRowsModified();
-      console.assert(
-        changes === expectedChanges,
-        'Got %i changes instead of %i in statement %s with params %s',
-        changes,
-        expectedChanges,
-        sqlStmt,
-        params
-      );
-    };
+  db.changeRows = (sqlStmt, params, expectedChanges) => {
+    const changes = db.run(sqlStmt, params).getRowsModified();
+    console.assert(
+      changes === expectedChanges,
+      'Got %i changes instead of %i in statement %s with params %s',
+      changes,
+      expectedChanges,
+      sqlStmt,
+      params
+    );
+  };
 
-    db.changeRow = (sqlStmt, params) => {
-      db.changeRows(sqlStmt, params, 1);
-    }
+  db.changeRow = (sqlStmt, params) => {
+    db.changeRows(sqlStmt, params, 1);
+  };
 
-    db.getAsObject = (sqlStmt, params) => {
-      const stmt = db.prepare(sqlStmt);
-      const obj = stmt.getAsObject(params || {});
-      stmt.free();
-      return obj;
-    }
+  db.getAsObject = (sqlStmt, params) => {
+    const stmt = db.prepare(sqlStmt);
+    const obj = stmt.getAsObject(params || {});
+    stmt.free();
+    return obj;
+  };
 
-    db.getAsObjects = (sqlStmt, params) => {
-      const stmt = db.prepare(sqlStmt);
-      const results = [];
-      stmt.bind(params);
-      while (stmt.step()) {
-        results.push(stmt.getAsObject());
-      }
-      stmt.free();
-      return results;
+  db.getAsObjects = (sqlStmt, params) => {
+    const stmt = db.prepare(sqlStmt);
+    const results = [];
+    stmt.bind(params);
+    while (stmt.step()) {
+      results.push(stmt.getAsObject());
     }
+    stmt.free();
+    return results;
+  };
 }
 
 export { findCols, addDbMethods };

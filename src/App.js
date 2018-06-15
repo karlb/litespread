@@ -1,10 +1,6 @@
 import React from 'react';
 import SQL from 'sql.js';
-import {
-  FocusStyleManager,
-  Card,
-  NonIdealState,
-} from '@blueprintjs/core';
+import { FocusStyleManager, Card, NonIdealState } from '@blueprintjs/core';
 import '@blueprintjs/core/lib/css/blueprint.css';
 import '@blueprintjs/icons/lib/css/blueprint-icons.css';
 import RemoteStorage from 'remotestoragejs';
@@ -15,7 +11,6 @@ import RemoteLitespread from './RemoteFile.js';
 import Document, { loadAsDb, createDummyTable } from './Document.js';
 import MainNavbar from './MainNavbar.js';
 import './App.css';
-
 
 class StartPage extends React.Component {
   constructor(props, context) {
@@ -128,7 +123,6 @@ class StartPage extends React.Component {
   }
 }
 
-
 class App extends React.Component {
   constructor(props, context) {
     super(props, context);
@@ -173,11 +167,13 @@ class App extends React.Component {
 
   render() {
     const DocWithProps = props => {
-      return <Document
-        {...props}
-        lastSync={this.state.lastSync}
-        remoteClient={remoteClient}
-      />;
+      return (
+        <Document
+          {...props}
+          lastSync={this.state.lastSync}
+          remoteClient={remoteClient}
+        />
+      );
     };
 
     return (
@@ -193,7 +189,6 @@ class App extends React.Component {
     );
   }
 }
-
 
 FocusStyleManager.onlyShowFocusOnTabs();
 

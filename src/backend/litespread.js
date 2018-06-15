@@ -4,8 +4,10 @@ var helper = require('./litespread_helper.js');
 const LATEST_VERSION = 5;
 
 var formatters = {
-  money: (x, c) => `CASE WHEN ${x} IS NOT NULL THEN printf("%.${c.precision}f", ${x}) END`,
-  number: (x, c) => `CASE WHEN ${x} IS NOT NULL THEN printf("%.${c.precision}f", ${x}) END`,
+  money: (x, c) =>
+    `CASE WHEN ${x} IS NOT NULL THEN printf("%.${c.precision}f", ${x}) END`,
+  number: (x, c) =>
+    `CASE WHEN ${x} IS NOT NULL THEN printf("%.${c.precision}f", ${x}) END`,
   date: x => `CASE WHEN ${x} IS NOT NULL THEN date(${x}) END`
 };
 
@@ -111,7 +113,6 @@ function make_formatted_view(db, table) {
   db.run(script);
 }
 
-
 function upgradeDocument(db) {
   const api_version = db.exec('SELECT api_version FROM litespread_document')[0]
     .values[0][0];
@@ -131,7 +132,6 @@ function upgradeDocument(db) {
   db.run('UPDATE litespread_document SET api_version = ?', [api_version + 1]);
   upgradeDocument(db);
 }
-
 
 // skipCommit is useful for tests
 function changeColumnName(db, table, colIndex, newName, skipCommit) {
@@ -156,9 +156,7 @@ function changeColumnName(db, table, colIndex, newName, skipCommit) {
   }
 }
 
-
 class Document {
-
   constructor(db) {
     helper.addDbMethods(db);
     db.run('PRAGMA foreign_keys = ON');
@@ -170,10 +168,9 @@ class Document {
   }
 
   importTable(tableName) {
-    this.db.run(
-      "INSERT INTO litespread_table(table_name) VALUES (?)",
-      [tableName]
-    );
+    this.db.run('INSERT INTO litespread_table(table_name) VALUES (?)', [
+      tableName
+    ]);
     const col_insert = this.db.prepare(`
           INSERT INTO litespread_column(table_name, name, position)
           VALUES (?, ?, ?)
@@ -228,24 +225,30 @@ class Document {
           CREATE UNIQUE INDEX litespread_column_unique_position
             ON litespread_column(table_name, position);
       `);
-    this.db.each(`
+    this.db.each(
+      `
         SELECT DISTINCT name AS table_name
         FROM sqlite_master
         WHERE type = 'table'
           AND name NOT LIKE 'litespread_%'
-        `, [],
-        ({ table_name }) => {
-          this.importTable(table_name);
-        }
+        `,
+      [],
+      ({ table_name }) => {
+        this.importTable(table_name);
+      }
     );
 
-    if (this.db.exec('SELECT count(*) FROM litespread_table')[0].values[0][0] === 0) {
+    if (
+      this.db.exec('SELECT count(*) FROM litespread_table')[0].values[0][0] ===
+      0
+    ) {
       throw new Error('Invalid file or no tables found.');
     }
   }
 
   update() {
-    this.tables = this.db.getAsObjects('SELECT * FROM litespread_table')
+    this.tables = this.db
+      .getAsObjects('SELECT * FROM litespread_table')
       .map(t => new Table(this.db, t, this));
     this.tables.forEach(table => {
       make_raw_view(this.db, table);
@@ -261,7 +264,6 @@ class Document {
     this.dataChangeCallbacks.forEach(c => c());
   }
 }
-
 
 class Table {
   constructor(db, tableRow, doc) {
@@ -285,18 +287,18 @@ class Table {
   }
 
   setCol(col, val) {
-      this.db.changeRow(
-        `
+    this.db.changeRow(
+      `
                     UPDATE litespread_table
                        SET ${col} = ?
                     WHERE table_name = ?
                 `,
-        [val, this.name]
-      );
+      [val, this.name]
+    );
   }
 
   sortRowids() {
-    sortRowids(this.db, this.name)
+    sortRowids(this.db, this.name);
   }
 
   drop() {
@@ -308,10 +310,16 @@ class Table {
 
   rename(newName) {
     this.db.run(`ALTER TABLE ${this.name} RENAME TO ${newName}`);
-    const params = {':old': this.name, ':new': newName};
+    const params = { ':old': this.name, ':new': newName };
     this.db.run('PRAGMA foreign_keys = OFF');
-    this.db.run("UPDATE litespread_table SET table_name = :new WHERE table_name = :old", params);
-    this.db.run("UPDATE litespread_column SET table_name = :new WHERE table_name = :old", params);
+    this.db.run(
+      'UPDATE litespread_table SET table_name = :new WHERE table_name = :old',
+      params
+    );
+    this.db.run(
+      'UPDATE litespread_column SET table_name = :new WHERE table_name = :old',
+      params
+    );
     this.db.run('PRAGMA foreign_keys = ON');
   }
 
@@ -328,14 +336,14 @@ class Table {
   }
 
   asJSON() {
-    const cols = this.columns.map(c => c.name)
+    const cols = this.columns.map(c => c.name);
     return {
       fields: cols,
       data: this.db.exec(`
           SELECT ${cols.join(', ')}
           FROM ${this.name}_formatted
-        `)[0].values,
-    }
+        `)[0].values
+    };
   }
 
   schemaChanged() {
@@ -347,7 +355,6 @@ class Table {
   }
 }
 
-
 class Column {
   constructor(db, columnRow, table) {
     Object.assign(this, columnRow);
@@ -356,7 +363,8 @@ class Column {
   }
 
   setCol(col, val) {
-    this.db.changeRow(`
+    this.db.changeRow(
+      `
           UPDATE litespread_column SET ${col} = ?
           WHERE table_name = ?
             AND name = ?
@@ -370,8 +378,7 @@ class Column {
     this.db.run(`
           UPDATE ${this.table_name}
           SET ${this.name} = ${updateSql}
-      `
-    );
+      `);
     this.dataChanged();
   }
 
@@ -400,7 +407,7 @@ class Column {
       `);
     }
     this.schemaChanged();
-  }
+  };
 
   schemaChanged() {
     this.table.schemaChanged();
@@ -412,29 +419,33 @@ class Column {
 }
 
 function getTableDesc(db, tableName) {
-  let table = db.getAsObject(`SELECT * FROM litespread_table WHERE table_name = '${tableName}'`);
+  let table = db.getAsObject(
+    `SELECT * FROM litespread_table WHERE table_name = '${tableName}'`
+  );
 
   return new Table(db, table);
 }
 
-
 function sortRowids(db, tableName) {
-  const orderBy = db.exec(`SELECT order_by FROM litespread_table WHERE table_name = '${tableName}'`)[0].values[0][0];
+  const orderBy = db.exec(
+    `SELECT order_by FROM litespread_table WHERE table_name = '${tableName}'`
+  )[0].values[0][0];
   console.assert(orderBy, 'Need sort criterion!');
   const sortedRows = db.exec(`
       SELECT rowid FROM ${tableName}_raw ORDER BY ${orderBy}
   `)[0].values;
-  const update = db.prepare(`UPDATE ${tableName} SET rowid = ? WHERE rowid = -?`);
+  const update = db.prepare(
+    `UPDATE ${tableName} SET rowid = ? WHERE rowid = -?`
+  );
   db.run(`UPDATE ${tableName} SET rowid = -rowid`);
   sortedRows.forEach(([oldRowid], i) => {
     update.run([i + 1, oldRowid]);
     console.assert(
-        db.getRowsModified() === 1,
-        `Failed to changed value for row ${oldRowid} to ${i + 1}`
+      db.getRowsModified() === 1,
+      `Failed to changed value for row ${oldRowid} to ${i + 1}`
     );
   });
 }
-
 
 function moveColumn(db, tableName, fromPosition, toPosition) {
   // Since sqlite checks the unique constraint after every row and there is no

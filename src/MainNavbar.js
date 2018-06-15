@@ -13,7 +13,6 @@ import {
 } from '@blueprintjs/core';
 import { Link } from 'react-router-dom';
 
-
 const MainNavbar = props => {
   let menus;
   if (props.doc) {
@@ -85,6 +84,5 @@ const MainNavbar = props => {
     </Navbar>
   );
 };
-
 
 export default MainNavbar;

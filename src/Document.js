@@ -1,17 +1,12 @@
 import React from 'react';
 import SQL from 'sql.js';
 import FileSaver from 'file-saver';
-import {
-  Tree,
-  Button,
-  EditableText
-} from '@blueprintjs/core';
+import { Tree, Button, EditableText } from '@blueprintjs/core';
 
 import SpreadTable from './SpreadTable.js';
 import MainNavbar from './MainNavbar.js';
 import * as ls from './backend/litespread.js';
 import { MIME_TYPE } from './RemoteFile.js';
-
 
 function loadAsDb(dataPromise, filename) {
   if (filename.endsWith('.csv')) {
@@ -31,15 +26,13 @@ function loadAsDb(dataPromise, filename) {
   }
 }
 
-
 function createDummyTable(db) {
-    db.run(`
+  db.run(`
         CREATE TABLE table1 (col1, col2, col3);
         INSERT INTO table1 (col1)
         VALUES (null), (null), (null);
     `);
 }
-
 
 class Document extends React.PureComponent {
   constructor(props, context) {
@@ -47,7 +40,7 @@ class Document extends React.PureComponent {
 
     this.state = {
       db: null,
-      last_db_change: null,
+      last_db_change: null
     };
   }
 
@@ -102,7 +95,10 @@ class Document extends React.PureComponent {
 
   save = () => {
     if (this.props.match.params.location === 'files') {
-      this.props.remoteClient.save(this.filename, this.state.db.export().buffer);
+      this.props.remoteClient.save(
+        this.filename,
+        this.state.db.export().buffer
+      );
       // Turn foreign keys back on which have been turned off during the
       // export. See https://github.com/kripken/sql.js/issues/233
       this.state.db.run('PRAGMA foreign_keys = ON');
@@ -129,17 +125,16 @@ class Document extends React.PureComponent {
 
   exportCSV = () => {
     const currentTableObj = this.state.lsdoc.tables.filter(
-                t => t.name === this.state.currentTable)[0];
+      t => t.name === this.state.currentTable
+    )[0];
     const json = currentTableObj.asJSON();
 
-    return import('papaparse').then(
-      Papa => {
-        const csv = Papa.unparse(json);
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const filename = this.filename.split('.')[0] + '.csv';
-        FileSaver.saveAs(blob, filename);
-      }
-    );
+    return import('papaparse').then(Papa => {
+      const csv = Papa.unparse(json);
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const filename = this.filename.split('.')[0] + '.csv';
+      FileSaver.saveAs(blob, filename);
+    });
   };
 
   rename = requestedName => {
@@ -157,48 +152,56 @@ class Document extends React.PureComponent {
     }
 
     let currentTableObj = this.state.lsdoc.tables.filter(
-                t => t.name === this.state.currentTable)[0];
+      t => t.name === this.state.currentTable
+    )[0];
     if (!currentTableObj) {
       currentTableObj = this.state.lsdoc.tables[0];
     }
 
-    const tableNodes = 
-      this.state.lsdoc.tables.map((table, tableIndex) => {
-        const selected = table.name === currentTableObj.name;
-        return {
-          id: 'table-' + tableIndex,
-          label: <EditableText
+    const tableNodes = this.state.lsdoc.tables.map((table, tableIndex) => {
+      const selected = table.name === currentTableObj.name;
+      return {
+        id: 'table-' + tableIndex,
+        label: (
+          <EditableText
             defaultValue={table.name}
             disabled={!selected}
             onConfirm={name => {
-              if (table.name === name) {return}
+              if (table.name === name) {
+                return;
+              }
               table.rename(name);
-              this.setState({currentTable: name});
-              this.onSchemaChange();
-            }} />,
-          table: table,
-          depth: 1,
-          path: [0, tableIndex],
-          isSelected: selected,
-          secondaryLabel: selected && this.state.lsdoc.tables.length > 1 && <Button
-            icon="trash"
-            className="pt-minimal"
-            onClick={() => {
-              table.drop();
+              this.setState({ currentTable: name });
               this.onSchemaChange();
             }}
           />
-        }
-      });
+        ),
+        table: table,
+        depth: 1,
+        path: [0, tableIndex],
+        isSelected: selected,
+        secondaryLabel: selected &&
+          this.state.lsdoc.tables.length > 1 && (
+            <Button
+              icon="trash"
+              className="pt-minimal"
+              onClick={() => {
+                table.drop();
+                this.onSchemaChange();
+              }}
+            />
+          )
+      };
+    });
 
     return (
       <div className="App">
         <MainNavbar doc={this} />
-        <div style={{display: 'flex', flexDirection: 'row'}}>
+        <div style={{ display: 'flex', flexDirection: 'row' }}>
           <Tree
-            onNodeClick={(node) => {
+            onNodeClick={node => {
               if (node.table) {
-                this.setState({currentTable: node.table.name});
+                this.setState({ currentTable: node.table.name });
               }
             }}
             contents={[
@@ -210,15 +213,17 @@ class Document extends React.PureComponent {
                 isExpanded: true,
                 hasCaret: false,
                 childNodes: tableNodes,
-                secondaryLabel: <Button
-                  icon="add"
-                  onClick={() => {
-                    createDummyTable(this.state.db);
-                    this.state.lsdoc.importTable('table1');
-                    this.onSchemaChange();
-                  }}
-                />
-              },
+                secondaryLabel: (
+                  <Button
+                    icon="add"
+                    onClick={() => {
+                      createDummyTable(this.state.db);
+                      this.state.lsdoc.importTable('table1');
+                      this.onSchemaChange();
+                    }}
+                  />
+                )
+              }
             ]}
           />
           <SpreadTable
@@ -235,9 +240,4 @@ class Document extends React.PureComponent {
   }
 }
 
-
-export {
-  Document as default,
-  createDummyTable,
-  loadAsDb,
-};
+export { Document as default, createDummyTable, loadAsDb };

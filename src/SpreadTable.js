@@ -8,7 +8,16 @@ import {
   EditableName,
   TableLoadingOption
 } from '@blueprintjs/table';
-import { EditableText, Menu, MenuItem, Callout, MenuDivider, Button, ButtonGroup, Icon } from '@blueprintjs/core';
+import {
+  EditableText,
+  Menu,
+  MenuItem,
+  Callout,
+  MenuDivider,
+  Button,
+  ButtonGroup,
+  Icon
+} from '@blueprintjs/core';
 import * as ls from './backend/litespread.js';
 import '@blueprintjs/table/lib/css/table.css';
 import colTypes from './col-types.js';
@@ -107,7 +116,7 @@ class SpreadTable extends React.PureComponent {
   };
 
   renderHeaderMenu = (table, column) => {
-    const changePrecision = (change) => {
+    const changePrecision = change => {
       this.props.db.changeRows(
         `
                     UPDATE litespread_column
@@ -119,12 +128,12 @@ class SpreadTable extends React.PureComponent {
         1
       );
       this.props.onSchemaChange();
-    }
-    const setSort = (orderBy) => {
+    };
+    const setSort = orderBy => {
       table.setCol('order_by', orderBy);
       this.props.onSchemaChange();
       this.props.onDataChange();
-    }
+    };
     return (
       <Menu>
         <MenuItem icon="percentage" text="Change Format">
@@ -139,10 +148,9 @@ class SpreadTable extends React.PureComponent {
                 this.props.onSchemaChange();
                 if (id === 'money' && !column.formula) {
                   // remove currency symbols from column
-                  this.props.db.create_function(
-                      'remove_currency',
-                      x => x.replace(/ ?([$€£¥]|[A-Z]{3}) ?/, '')
-                  )
+                  this.props.db.create_function('remove_currency', x =>
+                    x.replace(/ ?([$€£¥]|[A-Z]{3}) ?/, '')
+                  );
                   column.updateData(`remove_currency(${column.name})`);
                   this.props.onDataChange();
                 }
@@ -151,15 +159,24 @@ class SpreadTable extends React.PureComponent {
             />
           ))}
           <MenuDivider title="Settings" />
-          <MenuItem shouldDismissPopover={false} text={
-            <span>
-              Precision:
-              <ButtonGroup minimal={true} large={false}>
-                <Button icon="small-minus" onClick={() => changePrecision(-1)} />
-                <Button icon="small-plus" onClick={() => changePrecision(+1)} />
-              </ButtonGroup>
-            </span>
-          }/>
+          <MenuItem
+            shouldDismissPopover={false}
+            text={
+              <span>
+                Precision:
+                <ButtonGroup minimal={true} large={false}>
+                  <Button
+                    icon="small-minus"
+                    onClick={() => changePrecision(-1)}
+                  />
+                  <Button
+                    icon="small-plus"
+                    onClick={() => changePrecision(+1)}
+                  />
+                </ButtonGroup>
+              </span>
+            }
+          />
         </MenuItem>
         <MenuItem icon="widget-footer" text="Change Summary">
           <MenuItem
@@ -262,7 +279,7 @@ class SpreadTable extends React.PureComponent {
             onRowsReordered={(oldIndex, newIndex, length) => {
               if (this.props.table.order_by) {
                 this.props.table.sortRowids();
-                this.props.table.setCol('order_by', null);  // manual sorting
+                this.props.table.setCol('order_by', null); // manual sorting
                 this.props.onSchemaChange();
               }
               ls.moveRow(
@@ -278,7 +295,7 @@ class SpreadTable extends React.PureComponent {
             loadingOptions={this.state.loadingOptions}
             onColumnWidthChanged={(colIndex, width) => {
               console.log(this.props.table.columns[colIndex].setCol);
-              this.props.table.columns[colIndex].setCol('width', width)
+              this.props.table.columns[colIndex].setCol('width', width);
             }}
             columnWidths={this.props.table.columns.map(c => c.width)}
             className="spreadtable"
@@ -364,7 +381,7 @@ class SpreadTable extends React.PureComponent {
           name={name}
           onConfirm={value => this.changeColumnName(colIndex, value)}
         />
-        {sort && <Icon icon={'sort-' + sort} style={{margin: '6px 4px'}} />}
+        {sort && <Icon icon={'sort-' + sort} style={{ margin: '6px 4px' }} />}
       </React.Fragment>
     );
   };
