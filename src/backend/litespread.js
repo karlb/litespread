@@ -327,21 +327,6 @@ class Table {
     `);
   }
 
-  dropColumn(colName) {
-    const remaining_cols = this.columns
-      .filter(c => c.name !== colName)
-      .map(c => c.name)
-      .join(', ');
-    this.db.run(`
-      BEGIN;
-        ALTER TABLE ${this.name} RENAME TO __tmp;
-        CREATE TABLE ${this.name} AS
-        SELECT ${remaining_cols} FROM __tmp;
-        DROP TABLE __tmp;
-      COMMIT;
-    `);
-  }
-
   asJSON() {
     const cols = this.columns.map(c => c.name)
     return {
@@ -367,7 +352,7 @@ class Column {
   constructor(db, columnRow, table) {
     Object.assign(this, columnRow);
     this.db = db;
-    this.parent = table;
+    this.table = table;
   }
 
   setCol(col, val) {
@@ -390,12 +375,39 @@ class Column {
     this.dataChanged();
   }
 
+  drop = () => {
+    this.db.changeRow(
+      `
+      DELETE FROM litespread_column
+      WHERE table_name = ?
+      AND name = ?
+      `,
+      [this.table.name, this.name]
+    );
+    if (!this.formula) {
+      // actually drop column from SQL table
+      const remaining_cols = this.table.columns
+        .filter(c => c.name !== this.name)
+        .map(c => c.name)
+        .join(', ');
+      this.db.run(`
+        BEGIN;
+        ALTER TABLE ${this.table.name} RENAME TO __tmp;
+        CREATE TABLE ${this.table.name} AS
+        SELECT ${remaining_cols} FROM __tmp;
+        DROP TABLE __tmp;
+        COMMIT;
+      `);
+    }
+    this.schemaChanged();
+  }
+
   schemaChanged() {
-    this.parent.schemaChanged();
+    this.table.schemaChanged();
   }
 
   dataChanged() {
-    this.parent.dataChanged();
+    this.table.dataChanged();
   }
 }
 

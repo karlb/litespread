@@ -107,21 +107,6 @@ class SpreadTable extends React.PureComponent {
   };
 
   renderHeaderMenu = (table, column) => {
-    const deleteCol = () => {
-      this.props.db.changeRows(
-        `
-                    DELETE FROM litespread_column
-                    WHERE table_name = ?
-                      AND name = ?
-                `,
-        [column.table_name, column.name],
-        1
-      );
-      if (!column.formula) {
-		table.dropColumn(column.name);
-      }
-      this.props.onSchemaChange();
-    };
     const changePrecision = (change) => {
       this.props.db.changeRows(
         `
@@ -209,7 +194,7 @@ class SpreadTable extends React.PureComponent {
             onClick={() => setSort(column.name + ' DESC')}
           />
         </MenuItem>
-        <MenuItem icon="trash" text="Delete Column" onClick={deleteCol} />
+        <MenuItem icon="trash" text="Delete Column" onClick={column.drop} />
         {/*
                 {column.formula && <MenuItem icon="function" text="Change Formula" />}
                 <MenuItem icon="asterisk" text="Change Column Type">

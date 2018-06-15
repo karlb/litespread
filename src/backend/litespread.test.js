@@ -180,8 +180,15 @@ it('rename table', () => {
 
 it('drop column', () => {
   const doc = createTestDoc();
+  doc.tables[0].columns[1].drop();
+  doc.update();
   const table = doc.tables[0];
-  table.dropColumn('department_id')
+
+  // check litespread table
+  expect(table.columns.length).toEqual(1);
+  expect(table.columns[0].name).toEqual('name');
+
+  // check sql schema
   const cols = doc.db.exec(`
     PRAGMA table_info('employee')
   `)[0].values;

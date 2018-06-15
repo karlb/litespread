@@ -95,6 +95,9 @@ class Document extends React.PureComponent {
       last_db_change: new Date(),
       currentTable: lsdoc.tables[0].name
     });
+
+    // Keeping this global is nice for debugging.
+    window.lsdoc = lsdoc;
   };
 
   save = () => {
