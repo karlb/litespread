@@ -327,6 +327,21 @@ class Table {
     `);
   }
 
+  dropColumn(colName) {
+    const remaining_cols = this.columns
+      .filter(c => c.name !== colName)
+      .map(c => c.name)
+      .join(', ');
+    this.db.run(`
+      BEGIN;
+        ALTER TABLE ${this.name} RENAME TO __tmp;
+        CREATE TABLE ${this.name} AS
+        SELECT ${remaining_cols} FROM __tmp;
+        DROP TABLE __tmp;
+      COMMIT;
+    `);
+  }
+
   asJSON() {
     const cols = this.columns.map(c => c.name)
     return {

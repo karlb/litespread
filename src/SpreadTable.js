@@ -118,9 +118,7 @@ class SpreadTable extends React.PureComponent {
         1
       );
       if (!column.formula) {
-        this.props.db.run(
-          `ALTER TABLE ${column.table_name} DROP COLUMN ${column.name}`
-        );
+		table.dropColumn(column.name);
       }
       this.props.onSchemaChange();
     };

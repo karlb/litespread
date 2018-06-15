@@ -178,6 +178,17 @@ it('rename table', () => {
   expect(newTable.columns.length).toEqual(table.columns.length);
 });
 
+it('drop column', () => {
+  const doc = createTestDoc();
+  const table = doc.tables[0];
+  table.dropColumn('department_id')
+  const cols = doc.db.exec(`
+    PRAGMA table_info('employee')
+  `)[0].values;
+  expect(cols.length).toEqual(1);
+  expect(cols[0][1]).toEqual('name');
+});
+
 it('sortRowids', () => {
   function checkResult(orderBy, result) {
     const db = new sql.Database();
