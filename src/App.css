@@ -5,7 +5,7 @@
   text-align: right;
 }
 
-.pt-table-column-name {
+.bp3-table-column-name {
   font-weight: bold;
 }
 
@@ -38,7 +38,7 @@
   display: flex;
   margin: 0 -20px;
 }
-.big-actions .pt-card {
+.big-actions > * {
   width: 50%;
   margin: 20px;
 }
@@ -62,11 +62,11 @@ body,
   overflow: auto;
 }
 
-.pt-tree {
+.bp3-tree {
   min-width: 200px;
 }
 
 /* Work around invisible text while editing. See https://github.com/palantir/blueprint/issues/2236 */
-.pt-tree .pt-editable-input {
+.bp3-tree .bp3-editable-text {
   color: black;
 }

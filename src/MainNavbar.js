@@ -89,14 +89,14 @@ class MainNavbar extends React.Component {
           )}
         </NavbarGroup>
         <NavbarGroup align="right">
-          <Button className="pt-minimal" icon="home">
+          <Button minimal={true} icon="home">
             Home
           </Button>
           {menus}
           <NavbarDivider />
-          <Button className="pt-minimal" icon="user" />
-          <Button className="pt-minimal" icon="notifications" />
-          <Button className="pt-minimal" icon="cog" />
+          <Button minimal={true} icon="user" />
+          <Button minimal={true} icon="notifications" />
+          <Button minimal={true} icon="cog" />
         </NavbarGroup>
         {this.state.deleteDialogOpen && (
           <DeleteDialog

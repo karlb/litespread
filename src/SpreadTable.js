@@ -16,7 +16,8 @@ import {
   MenuDivider,
   Button,
   ButtonGroup,
-  Icon
+  Icon,
+  Classes
 } from '@blueprintjs/core';
 import * as ls from './backend/litespread.js';
 import '@blueprintjs/table/lib/css/table.css';
@@ -235,32 +236,11 @@ class SpreadTable extends React.PureComponent {
     }
     return (
       <div>
-        <div className="pt-button-group">
-          <a
-            className="pt-button pt-icon-add-row-bottom"
-            tabIndex="0"
-            role="button"
-            onClick={this.addRow}
-          >
-            Add Row
-          </a>
-          <a
-            className="pt-button pt-icon-add-column-right"
-            tabIndex="0"
-            role="button"
-            onClick={this.addColumn}
-          >
-            Add Data Column
-          </a>
-          <a
-            className="pt-button pt-icon-function"
-            tabIndex="0"
-            role="button"
-            onClick={this.addFormulaColumn}
-          >
-            Add Formula Column
-          </a>
-        </div>
+        <ButtonGroup>
+            <Button icon="add-row-bottom" onClick={this.addRow}>Add Row</Button>
+            <Button icon="add-column-right" onClick={this.addColumn}>Add Data Column</Button>
+            <Button icon="function" onClick={this.addFormulaColumn}>Add Formula Column</Button>
+        </ButtonGroup>
         <div>
           <Table
             numRows={this.state.rows.length}

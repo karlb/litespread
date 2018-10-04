@@ -77,7 +77,7 @@ class StartPage extends React.Component {
               <NonIdealState
                 title="Create new File"
                 description="Start from scratch with an empty file."
-                visual="add"
+                icon="add"
               />
             </Card>
             <Card
@@ -94,7 +94,7 @@ class StartPage extends React.Component {
               <NonIdealState
                 title="Load from Disk"
                 description="Load file from disk and start editing."
-                visual="folder-open"
+                icon="folder-open"
               />
             </Card>
           </div>
@@ -113,7 +113,7 @@ class StartPage extends React.Component {
               <NonIdealState
                 title="No Files found"
                 description="Apparently you didn't save any files in Litespread, yet. Please use on of the actions above to work with Litespread."
-                visual="document"
+                icon="document"
               />
             )}
           </Card>
