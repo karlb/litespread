@@ -16,8 +16,7 @@ import {
   MenuDivider,
   Button,
   ButtonGroup,
-  Icon,
-  Classes
+  Icon
 } from '@blueprintjs/core';
 import * as ls from './backend/litespread.js';
 import '@blueprintjs/table/lib/css/table.css';
