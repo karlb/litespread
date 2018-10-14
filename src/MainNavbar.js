@@ -59,15 +59,17 @@ class MainNavbar extends React.Component {
             text="Delete File"
             onClick={this.openDeleteDialog}
           />
+          {/*
           <MenuItem icon="folder-open" text="Synced Files">
             <MenuItem icon="blank" text="..." />
           </MenuItem>
+          */}
         </Menu>
       );
 
       menus = (
         <Popover content={fileMenu} position={Position.BOTTOM}>
-          <Button className="pt-minimal" icon="document">
+          <Button minimal={true} icon="document">
             File
           </Button>
         </Popover>
@@ -89,14 +91,18 @@ class MainNavbar extends React.Component {
           )}
         </NavbarGroup>
         <NavbarGroup align="right">
+          {/*
           <Button minimal={true} icon="home">
             Home
           </Button>
+          */}
           {menus}
           <NavbarDivider />
           <Button minimal={true} icon="user" />
+          {/*
           <Button minimal={true} icon="notifications" />
           <Button minimal={true} icon="cog" />
+          */}
         </NavbarGroup>
         {this.state.deleteDialogOpen && (
           <DeleteDialog
