@@ -6,6 +6,8 @@ import {
   NavbarHeading,
   NavbarDivider,
   Button,
+  Classes,
+  ControlGroup,
   Menu,
   MenuItem,
   Popover,
@@ -75,6 +77,50 @@ class MainNavbar extends React.Component {
         </Popover>
       );
     }
+      
+    const connState = this.props.remotestorageState.connectionState;
+    let userMenu;
+    if (connState !== 'not-connected') {
+      userMenu = (
+        <Menu>
+          <MenuItem
+            icon="log-out"
+            text="Log out"
+            onClick={() => {this.props.remotestorageState.remoteStorage.disconnect()}}
+          />
+        </Menu>
+      );
+    } else {
+      userMenu = (
+        <form style={{width: '350px', padding: '20px'}}
+          onSubmit={(event) => {
+            this.props.remotestorageState.remoteStorage.connect(event.target.username.value);
+            event.preventDefault();
+          }}
+        >
+          <h4 className={Classes.HEADING}>Connect to remoteStorage</h4>
+          <ControlGroup fill={true}>
+            <input className={Classes.INPUT} placeholder="example@5apps.com"
+              type="text" name="username" autoFocus={true} autocomplete="username"/>
+            <Button type="submit" icon="log-in" intent="primary">Connect</Button>
+          </ControlGroup>
+          <p className={`${Classes.TEXT_SMALL} ${Classes.TEXT_MUTED}`} style={{'margin': '10px 0 0 0'}}>
+            You can easily sync your Litespread documents across multiple deviced using a remoteStorage provider. Otherwise, all data will only be saved by your browser.
+          </p>
+          <p className={`${Classes.TEXT_SMALL} ${Classes.TEXT_MUTED}`} style={{'margin': '10px 0 0 0'}}>
+            <a href="https://remotestorage.io/" target="_blank" rel="noopener noreferrer">Learn more about remoteStorage</a>
+            <br />
+            <a href="https://5apps.com/storage/beta" target="_blank" rel="noopener noreferrer">Get a free account</a>
+          </p>
+          {/*
+          <MenuItem
+            icon="log-in"
+            text="Connect to remoteStorage"
+          />
+          */}
+        </form>
+      );
+    }
 
     return (
       <Navbar>
@@ -98,7 +144,11 @@ class MainNavbar extends React.Component {
           */}
           {menus}
           <NavbarDivider />
-          <Button minimal={true} icon="user" />
+          <Popover content={userMenu} position={Position.BOTTOM}>
+            <Button minimal={true} icon={connState === 'offline' ? 'offline' : 'user'}>
+              {['connected', 'offline'].includes(connState) && this.props.remotestorageState.connectedAs}
+            </Button>
+          </Popover>
           {/*
           <Button minimal={true} icon="notifications" />
           <Button minimal={true} icon="cog" />

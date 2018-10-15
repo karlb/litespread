@@ -202,7 +202,10 @@ class Document extends React.PureComponent {
 
     return (
       <div className="App">
-        <MainNavbar doc={this} />
+        <MainNavbar doc={this}
+          remotestorageState={this.props.remotestorageState}
+          remoteClient={this.props.remoteClient}
+        />
         <div style={{ display: 'flex', flexDirection: 'row' }}>
           <Tree
             onNodeClick={node => {

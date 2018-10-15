@@ -1,10 +1,9 @@
 import React from 'react';
 import SQL from 'sql.js';
-import { FocusStyleManager, Card, NonIdealState } from '@blueprintjs/core';
+import { FocusStyleManager, Card, Classes, Dialog, NonIdealState } from '@blueprintjs/core';
 import '@blueprintjs/core/lib/css/blueprint.css';
 import '@blueprintjs/icons/lib/css/blueprint-icons.css';
 import RemoteStorage from 'remotestoragejs';
-import Widget from 'remotestorage-widget';
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 
 import RemoteLitespread from './RemoteFile.js';
@@ -16,14 +15,12 @@ class StartPage extends React.Component {
   constructor(props, context) {
     super(props, context);
 
-    // remotestorage widget
-    const widget = new Widget(remoteStorage);
-    widget.attach();
-
     this.state = {
       files: []
     };
+  }
 
+  componentDidMount() {
     remoteClient.list().then(listing => {
       this.setState({ files: Object.keys(listing) });
     });
@@ -69,7 +66,7 @@ class StartPage extends React.Component {
   render() {
     return (
       <div>
-        <MainNavbar />
+        <MainNavbar remotestorageState={this.props.remotestorageState}/>
         <div className="start-page">
           <h1>Litespread Documents</h1>
           <div className="big-actions">
@@ -112,7 +109,7 @@ class StartPage extends React.Component {
             ) : (
               <NonIdealState
                 title="No Files found"
-                description="Apparently you didn't save any files in Litespread, yet. Please use on of the actions above to work with Litespread."
+                description="Apparently you didn't save any files in Litespread, yet. Please use on of the actions above to work with Litespread. If you already have documents in your remoteStorage, please sign in from the menu at the top-right, now."
                 icon="document"
               />
             )}
@@ -130,7 +127,8 @@ class App extends React.Component {
     this.state = {
       lastSync: null,
       connectionState: null,
-      connectedAs: null
+      connectedAs: null,
+      error: null,
     };
   }
 
@@ -144,14 +142,20 @@ class App extends React.Component {
         connectedAs: userAddress
       });
     });
+    remoteStorage.on('network-online', () => {
+      this.setState({ connectionState: 'connected' });
+    });
     remoteStorage.on('network-offline', () => {
       this.setState({ connectionState: 'offline' });
     });
-    remoteStorage.on('network-online', () => {
-      this.setState({ connectionState: 'online' });
-    });
     remoteStorage.on('not-connected', () => {
       this.setState({ connectionState: 'not-connected' });
+    });
+    remoteStorage.on('disconnected', () => {
+      this.setState({ connectionState: 'not-connected' });
+    });
+    remoteStorage.on('error', (error) => {
+      this.showError(error.name, error.message);
     });
 
     // handle sync
@@ -166,12 +170,19 @@ class App extends React.Component {
   }
 
   render() {
+    const remotestorageState = {
+      lastSync: this.state.lastSync,
+      connectionState: this.state.connectionState,
+      connectedAs: this.state.connectedAs,
+      remoteClient: remoteClient,
+      remoteStorage: remoteStorage,
+    };
     const DocWithProps = props => {
       return (
         <Document
           {...props}
-          lastSync={this.state.lastSync}
           remoteClient={remoteClient}
+          remotestorageState={remotestorageState}
         />
       );
     };
@@ -179,14 +190,29 @@ class App extends React.Component {
     return (
       <Router>
         <React.Fragment>
-          <Route exact path="/" component={StartPage} />
+          <Route exact path="/" render={
+            (props) => <StartPage {...props} remotestorageState={remotestorageState} />
+          } />
           <Route
             path="/:location(files|url)/:filename(.*)"
             render={DocWithProps}
           />
+          {this.state.error &&
+            <Dialog title={this.state.error.title} isOpen={true}
+              onClose={() => this.setState({error: null})}
+            >
+              <div className={Classes.DIALOG_BODY}>
+                {this.state.error.text}
+              </div>
+            </Dialog>
+          }
         </React.Fragment>
       </Router>
     );
+  }
+
+  showError = (title, text) => {
+    this.setState({error: {title: title, text: text}})
   }
 }
 
@@ -194,10 +220,11 @@ FocusStyleManager.onlyShowFocusOnTabs();
 
 const remoteStorage = new RemoteStorage({
   modules: [RemoteLitespread],
-  cache: true
-  //logging: true,
+  cache: true,
+  // logging: true,
 });
 remoteStorage.access.claim('litespread', 'rw');
+remoteStorage.caching.enable('/litespread/');
 const remoteClient = remoteStorage.litespread;
 window.remoteClient = remoteClient; // for debugging
 
