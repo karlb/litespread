@@ -263,6 +263,25 @@ class Document {
   dataChanged() {
     this.dataChangeCallbacks.forEach(c => c());
   }
+
+  createTableWithDefaultName(defaultName) {
+    let counter = 1;
+    this.tables.forEach(table => {
+      let match = RegExp(defaultName + '(\\d+)').exec(table.name);
+      if (match) {
+        counter = Math.max(parseInt(match[1], 10) + 1, counter);
+      };
+    });
+    const name = defaultName + counter;
+    this.db.run(`
+          CREATE TABLE ${name} (col1, col2, col3);
+          INSERT INTO ${name} (col1)
+          VALUES (null), (null), (null);
+      `);
+    this.importTable(name);
+    this.update();
+    this.schemaChanged();
+  }
 }
 
 class Table {

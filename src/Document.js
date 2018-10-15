@@ -26,14 +26,6 @@ function loadAsDb(dataPromise, filename) {
   }
 }
 
-function createDummyTable(db) {
-  db.run(`
-        CREATE TABLE table1 (col1, col2, col3);
-        INSERT INTO table1 (col1)
-        VALUES (null), (null), (null);
-    `);
-}
-
 class Document extends React.PureComponent {
   constructor(props, context) {
     super(props, context);
@@ -226,9 +218,7 @@ class Document extends React.PureComponent {
                   <Button
                     icon="add"
                     onClick={() => {
-                      createDummyTable(this.state.db);
-                      this.state.lsdoc.importTable('table1');
-                      this.onSchemaChange();
+                      this.state.lsdoc.createTableWithDefaultName('table');
                     }}
                   />
                 )
@@ -249,4 +239,4 @@ class Document extends React.PureComponent {
   }
 }
 
-export { Document as default, createDummyTable, loadAsDb };
+export { Document as default, loadAsDb };

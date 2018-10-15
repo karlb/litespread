@@ -7,7 +7,7 @@ import RemoteStorage from 'remotestoragejs';
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 
 import RemoteLitespread from './RemoteFile.js';
-import Document, { loadAsDb, createDummyTable } from './Document.js';
+import Document, { loadAsDb } from './Document.js';
 import MainNavbar from './MainNavbar.js';
 import './App.css';
 
@@ -28,7 +28,11 @@ class StartPage extends React.Component {
 
   newFile = event => {
     const db = new SQL.Database();
-    createDummyTable(db);
+    db.run(`
+      CREATE TABLE table1 (col1, col2, col3);
+      INSERT INTO table1 (col1)
+      VALUES (null), (null), (null);
+    `);
     const filename = 'new_file.sqlite3';
     remoteClient
       .add(filename, db.export().buffer)

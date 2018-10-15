@@ -221,3 +221,10 @@ it('sortRowids', () => {
 
   checkResult('value DESC', [3, 2, 1, 0]);
 });
+
+
+it('createTableWithDefaultName', () => {
+  const doc = createTestDoc();
+  doc.createTableWithDefaultName('table');
+  doc.createTableWithDefaultName('table');
+});
