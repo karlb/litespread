@@ -72,7 +72,7 @@ class StartPage extends React.Component {
       <div>
         <MainNavbar remotestorageState={this.props.remotestorageState}/>
         <div className="start-page">
-          <h1>Litespread Documents</h1>
+          <h1 className={Classes.HEADING}>Litespread Documents</h1>
           <div className="big-actions">
             <Card interactive={true} onClick={this.newFile}>
               <NonIdealState
@@ -101,7 +101,7 @@ class StartPage extends React.Component {
           </div>
 
           <Card>
-            <h2>Your Files</h2>
+            <h2 className={Classes.HEADING}>Your Files</h2>
             {this.state.files.length ? (
               <ul className="pt-list-unstyled">
                 {this.state.files.map(filename => (

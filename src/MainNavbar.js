@@ -171,7 +171,7 @@ const DeleteDialog = props => {
       {...props}
       ////className={this.props.data.themeName}
       cancelButtonText="Cancel"
-      confirmButtonText="Move to Trash"
+      confirmButtonText="Delete"
       icon="trash"
       intent={Intent.DANGER}
       //isOpen={isOpen}
