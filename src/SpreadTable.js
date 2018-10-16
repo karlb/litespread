@@ -137,7 +137,7 @@ class SpreadTable extends React.PureComponent {
                 if (id === 'money' && !column.formula) {
                   // remove currency symbols from column
                   this.props.db.create_function('remove_currency', x =>
-                    x.replace(/ ?([$€£¥]|[A-Z]{3}) ?/, '')
+                    x === null ? null : x.replace(/ ?([$€£¥]|[A-Z]{3}) ?/, '')
                   );
                   column.updateData(`remove_currency(${column.name})`);
                   this.props.onDataChange();
