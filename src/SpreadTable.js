@@ -96,8 +96,7 @@ class SpreadTable extends React.PureComponent {
   };
 
   addColumn = () => {
-    this.props.table.addColumn('new_col');
-    this.props.onSchemaChange();
+    this.props.table.addColumnWithDefaultName('col');
   };
 
   addFormulaColumn = () => {

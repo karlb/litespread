@@ -156,6 +156,18 @@ function changeColumnName(db, table, colIndex, newName, skipCommit) {
   }
 }
 
+function findDefaultName(defaultName, existingNames) {
+    let counter = 1;
+    existingNames.forEach(name => {
+      let match = RegExp(defaultName + '(\\d+)').exec(name);
+      if (match) {
+        counter = Math.max(parseInt(match[1], 10) + 1, counter);
+      };
+    });
+    console.log(existingNames, counter);
+    return defaultName + counter;
+}
+
 class Document {
   constructor(db) {
     helper.addDbMethods(db);
@@ -265,14 +277,7 @@ class Document {
   }
 
   createTableWithDefaultName(defaultName) {
-    let counter = 1;
-    this.tables.forEach(table => {
-      let match = RegExp(defaultName + '(\\d+)').exec(table.name);
-      if (match) {
-        counter = Math.max(parseInt(match[1], 10) + 1, counter);
-      };
-    });
-    const name = defaultName + counter;
+    const name = findDefaultName(defaultName, this.tables.map(t => t.name));
     this.db.run(`
           CREATE TABLE ${name} (col1, col2, col3);
           INSERT INTO ${name} (col1)
@@ -284,25 +289,29 @@ class Document {
   }
 }
 
+
 class Table {
   constructor(db, tableRow, doc) {
-    let columns = [];
-    db.each(
-      `
-              SELECT * FROM litespread_column
-              WHERE table_name = '${tableRow.table_name}'
-              ORDER BY position
-          `,
-      [],
-      db_row => columns.push(new Column(db, db_row, this))
-    );
-
     this.db = db;
     this.parent = doc;
     this.name = tableRow.table_name;
-    this.columns = columns;
     this.order_by = tableRow.order_by;
-    this.hasFooter = columns.some(c => c.summary);
+    this._updateColumns();
+    this.hasFooter = this.columns.some(c => c.summary);
+  }
+
+  _updateColumns() {
+    let columns = [];
+    this.db.each(
+      `
+              SELECT * FROM litespread_column
+              WHERE table_name = '${this.name}'
+              ORDER BY position
+          `,
+      [],
+      db_row => columns.push(new Column(this.db, db_row, this))
+    );
+    this.columns = columns;
   }
 
   setCol(col, val) {
@@ -352,6 +361,14 @@ class Table {
         WHERE table_name = '${this.name}'
       ));
     `);
+    this.schemaChanged();
+  }
+
+  addColumnWithDefaultName(defaultName) {
+    const name = findDefaultName(defaultName,
+                                 this.columns.map(c => c.name));
+    this.addColumn(name);
+    this._updateColumns();
   }
 
   asJSON() {

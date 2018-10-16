@@ -228,3 +228,10 @@ it('createTableWithDefaultName', () => {
   doc.createTableWithDefaultName('table');
   doc.createTableWithDefaultName('table');
 });
+
+it('addColumnWithDefaultName', () => {
+  const doc = createTestDoc();
+  const table = doc.tables[0];
+  table.addColumnWithDefaultName('col');
+  table.addColumnWithDefaultName('col');
+});
