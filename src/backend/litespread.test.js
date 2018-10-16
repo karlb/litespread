@@ -234,4 +234,5 @@ it('addColumnWithDefaultName', () => {
   const table = doc.tables[0];
   table.addColumnWithDefaultName('col');
   table.addColumnWithDefaultName('col');
+  table.addColumnWithDefaultName('col', '1');
 });

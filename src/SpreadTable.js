@@ -100,18 +100,7 @@ class SpreadTable extends React.PureComponent {
   };
 
   addFormulaColumn = () => {
-    this.props.db.changeRows(
-      `
-                INSERT INTO litespread_column (table_name, name, formula, position)
-                VALUES (
-                    :table_name, 'new_col', '1',
-                    (SELECT max(position) + 1 FROM litespread_column WHERE table_name = :table_name)
-                )
-            `,
-      { ':table_name': this.props.table.name },
-      1
-    );
-    this.props.onSchemaChange();
+    this.props.table.addColumnWithDefaultName('col', '1 + 1');
   };
 
   renderHeaderMenu = (table, column) => {

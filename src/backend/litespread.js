@@ -164,7 +164,6 @@ function findDefaultName(defaultName, existingNames) {
         counter = Math.max(parseInt(match[1], 10) + 1, counter);
       };
     });
-    console.log(existingNames, counter);
     return defaultName + counter;
 }
 
@@ -351,23 +350,27 @@ class Table {
     this.db.run('PRAGMA foreign_keys = ON');
   }
 
-  addColumn(colName) {
+  addColumn(colName, formula=null) {
+    if (!formula) {
+      this.db.run(`
+        ALTER TABLE ${this.name} ADD COLUMN '${colName}';
+      `);
+    }
     this.db.run(`
-      ALTER TABLE ${this.name} ADD COLUMN '${colName}';
-      INSERT INTO litespread_column(table_name, name, position)
+      INSERT INTO litespread_column(table_name, name, position, formula)
       VALUES ('${this.name}', '${colName}', (
         SELECT max(position) + 1
         FROM litespread_column
         WHERE table_name = '${this.name}'
-      ));
-    `);
+      ), ?);
+    `, [formula]);
     this.schemaChanged();
   }
 
-  addColumnWithDefaultName(defaultName) {
+  addColumnWithDefaultName(defaultName, formula=null) {
     const name = findDefaultName(defaultName,
                                  this.columns.map(c => c.name));
-    this.addColumn(name);
+    this.addColumn(name, formula);
     this._updateColumns();
   }
 
