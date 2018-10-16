@@ -124,7 +124,14 @@ class SpreadTable extends React.PureComponent {
     };
     return (
       <Menu>
-        <MenuItem icon="percentage" text="Change Format">
+        <MenuItem icon="percentage" text="Change Format"
+            // workaround for
+            // https://github.com/palantir/blueprint/issues/3010
+            popoverProps={{
+              hoverCloseDelay: 400,
+              captureDismiss: true,
+            }}
+        >
           <MenuDivider title="Types" />
           {Object.entries(colTypes).map(([id, c]) => (
             <MenuItem
