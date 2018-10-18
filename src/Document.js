@@ -198,7 +198,7 @@ class Document extends React.PureComponent {
           remotestorageState={this.props.remotestorageState}
           remoteClient={this.props.remoteClient}
         />
-        <div style={{ display: 'flex', flexDirection: 'row' }}>
+        <div className="document-container">
           <Tree
             onNodeClick={node => {
               if (node.table) {

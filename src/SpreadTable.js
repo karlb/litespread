@@ -229,13 +229,13 @@ class SpreadTable extends React.PureComponent {
       throw Error('No table selected!');
     }
     return (
-      <div>
+      <div className="spreadtable-outer-container">
         <ButtonGroup>
             <Button icon="add-row-bottom" onClick={this.addRow}>Add Row</Button>
             <Button icon="add-column-right" onClick={this.addColumn}>Add Data Column</Button>
             <Button icon="function" onClick={this.addFormulaColumn}>Add Formula Column</Button>
         </ButtonGroup>
-        <div>
+        <div className="spreadtable-container">
           <Table
             numRows={this.state.rows.length}
             enableColumnReordering={true}
@@ -283,12 +283,12 @@ class SpreadTable extends React.PureComponent {
               />
             ))}
           </Table>
-        </div>
         {this.state.loadingError && (
           <Callout className="pt-intent-danger">
             {this.state.loadingError}
           </Callout>
         )}
+        </div>
       </div>
     );
   }
