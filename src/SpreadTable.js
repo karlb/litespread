@@ -351,11 +351,11 @@ class SpreadTable extends React.PureComponent {
 
     return (
       <React.Fragment>
+        {sort && <Icon icon={'sort-' + sort} style={{ margin: '6px 4px', float: 'right' }} />}
         <EditableName
           name={name}
           onConfirm={value => this.changeColumnName(colIndex, value)}
         />
-        {sort && <Icon icon={'sort-' + sort} style={{ margin: '6px 4px' }} />}
       </React.Fragment>
     );
   };
