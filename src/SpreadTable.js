@@ -10,6 +10,7 @@ import {
 } from '@blueprintjs/table';
 import {
   EditableText,
+  Classes,
   Menu,
   MenuItem,
   Callout,
@@ -374,7 +375,7 @@ class SpreadTable extends React.PureComponent {
         nameRenderer={this.nameRenderer}
       >
         {col.formula && (
-          <div className="formula">
+          <div className={`formula ${Classes.TEXT_MUTED} ${Classes.TEXT_SMALL}`}>
             =&nbsp;
             <EditableText
               defaultValue={col.formula}
