@@ -15,7 +15,7 @@
     "react": "^16.5.2",
     "react-dom": "^16",
     "react-router-dom": "^4",
-    "react-scripts": "2",
+    "react-scripts": "^1",
     "remotestoragejs": "^1.0.3",
     "source-map-explorer": "^1.6.0",
     "sql.js": "^0.5.0",
@@ -29,11 +29,5 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
-  },
-  "browserslist": [
-    ">0.2%",
-    "not dead",
-    "not ie <= 11",
-    "not op_mini all"
-  ]
+  }
 }
