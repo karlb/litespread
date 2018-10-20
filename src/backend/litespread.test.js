@@ -24,7 +24,7 @@ function createTestDoc() {
     `);
   db.run(`
         CREATE VIEW v_employee AS
-        SELECT * FROM employee;
+        SELECT 'foo' AS name, 1 AS department_id;
   `);
   return new ls.Document(db);
 }
@@ -247,7 +247,18 @@ it('addColumnWithDefaultName', () => {
 
 it('view: get/setSource', () => {
   const doc = createTestDoc();
-  const view = doc.tables.filter(t => t.type === 'view')[0];
+  let view = doc.tables.filter(t => t.type === 'view')[0];
   const sql = view.getSource();
+
+  // overwrite view with same SQL an expect same output
   view.setSource(sql);
+  doc.update();
+  view = doc.tables.filter(t => t.type === 'view')[0];
+  expect(view.columns.map(c => c.name)).toEqual(['name', 'department_id']);
+
+  // add one column and remove another one
+  view.setSource("SELECT 'foo' AS name, 2 AS bacon");
+  doc.update();
+  view = doc.tables.filter(t => t.type === 'view')[0];
+  expect(view.columns.map(c => c.name)).toEqual(['name', 'bacon']);
 })

@@ -99,7 +99,7 @@ function make_formatted_view(db, table) {
       return format_col(col, summary(col.name));
     })
     .join(', ');
-  var script = `
+  let script = `
         DROP VIEW IF EXISTS ${table.name}_formatted;
         CREATE VIEW ${table.name}_formatted AS
         SELECT rowid, ${select} FROM ${table.name}_raw
@@ -195,11 +195,14 @@ class Document {
       'SELECT name FROM litespread_column WHERE table_name = ?', [tableName]);
     const col_insert = this.db.prepare(`
           INSERT INTO litespread_column(table_name, name, position)
-          VALUES (?, ?, ?)
+          VALUES (?, ?, (
+              SELECT coalesce(max(position), -1) + 1 FROM litespread_column
+              WHERE table_name = ?
+            ))
       `);
-    this.db.each(`PRAGMA table_info(${tableName})`, [], ({ cid, name }) => {
+    this.db.each(`PRAGMA table_info(${tableName})`, [], ({ name }) => {
       if (!existingCols.includes(name)) {
-        col_insert.run([tableName, name, cid]);
+        col_insert.run([tableName, name, tableName]);
       }
     });
   }
@@ -332,7 +335,9 @@ class Table {
     let columns = [];
     this.db.each(
       `
-              SELECT * FROM litespread_column
+              SELECT litespread_column.*
+              FROM litespread_column
+                   JOIN pragma_table_info('${this.name}') USING (name)
               WHERE table_name = '${this.name}'
               ORDER BY position
           `,
