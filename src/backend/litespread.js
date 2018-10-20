@@ -273,7 +273,7 @@ class Document {
   update() {
     this.tables = this.db
       .getAsObjects('SELECT * FROM litespread_table')
-      .map(t => new Table(this.db, t, this));
+      .map(t => makeTable(this.db, t, this));
     this.tables.forEach(table => {
       make_raw_view(this.db, table);
       make_formatted_view(this.db, table);
@@ -295,12 +295,19 @@ class Document {
           INSERT INTO ${name} (col1)
           VALUES (null), (null), (null);
       `);
-    this.importTable(name);
+    this.importTable(name, 'table');
     this.update();
     this.schemaChanged();
   }
 }
 
+function makeTable(db, tableRow, doc) {
+  const classes = {
+    'table': Table,
+    'view': View
+  };
+  return new classes[tableRow.type](db, tableRow, doc)
+}
 
 class Table {
   constructor(db, tableRow, doc) {
@@ -405,6 +412,15 @@ class Table {
 
   dataChanged() {
     this.parent.dataChanged();
+  }
+}
+
+class View extends Table {
+  getSource() {
+    const create = this.db.exec(
+      `SELECT sql FROM sqlite_master WHERE name = '${this.name}'`
+    )[0].values[0][0];
+    return create.match(/ AS (.*)/)[1]
   }
 }
 

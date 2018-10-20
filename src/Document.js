@@ -1,7 +1,7 @@
 import React from 'react';
 import SQL from 'sql.js';
 import FileSaver from 'file-saver';
-import { Tree, Button, EditableText } from '@blueprintjs/core';
+import { Tree, Button, EditableText, Dialog, Classes, Intent } from '@blueprintjs/core';
 
 import SpreadTable from './SpreadTable.js';
 import MainNavbar from './MainNavbar.js';
@@ -32,7 +32,8 @@ class Document extends React.PureComponent {
 
     this.state = {
       db: null,
-      last_db_change: null
+      last_db_change: null,
+      editView: null,
     };
   }
 
@@ -178,17 +179,29 @@ class Document extends React.PureComponent {
         depth: 1,
         path: [0, tableIndex],
         isSelected: selected,
-        secondaryLabel: selected &&
-          this.state.lsdoc.tables.length > 1 && (
-            <Button
-              icon="trash"
-              className="pt-minimal"
-              onClick={() => {
-                table.drop();
-                this.onSchemaChange();
-              }}
-            />
-          )
+        secondaryLabel: selected && (
+          <div>
+            {table.type === 'view' && (
+              <Button
+                icon="cog"
+                minimal={true}
+                onClick={() => {
+                  this.setState({ editView: table });
+                }}
+              />
+            )}
+            {this.state.lsdoc.tables.length > 1 && (
+              <Button
+                icon="trash"
+                minimal={true}
+                onClick={() => {
+                  table.drop();
+                  this.onSchemaChange();
+                }}
+              />
+            )}
+          </div>
+        )
       };
     });
 
@@ -234,9 +247,36 @@ class Document extends React.PureComponent {
             onSchemaChange={this.onSchemaChange}
           />
         </div>
+        { this.state.editView !== null && (
+          <ViewEditor
+            view={this.state.editView}
+            onClose={() => this.setState({ editView: null })}
+          />
+        )}
       </div>
     );
   }
 }
+
+
+const ViewEditor = props => {
+  return (
+    <Dialog isOpen={true} onClose={props.onClose} title={'Edit ' + props.view.name}>
+      <div className={Classes.DIALOG_BODY}>
+        <pre className={Classes.CODE_BLOCK}>
+          <code>
+            {props.view.getSource()}
+          </code>
+        </pre>
+      </div>
+      <div className={Classes.DIALOG_FOOTER}>
+        <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+          <Button onClick={props.onClose}>Discard Changes</Button>
+          <Button intent={Intent.PRIMARY} onClick={props.onClose}>Save</Button>
+        </div>
+      </div>
+    </Dialog>
+  );
+};
 
 export { Document as default, loadAsDb };
