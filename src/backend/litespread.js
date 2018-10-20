@@ -184,15 +184,23 @@ class Document {
   }
 
   importTable(tableName, type) {
-    this.db.run('INSERT INTO litespread_table(table_name, type) VALUES (?, ?)', [
-      tableName, type
-    ]);
+    if (!this.db.get(
+      'SELECT ? IN (SELECT table_name FROM litespread_table)', [tableName])[0][0]
+    ) {
+      this.db.run('INSERT INTO litespread_table(table_name, type) VALUES (?, ?)', [
+        tableName, type
+      ]);
+    }
+    const existingCols = this.db.getCol(
+      'SELECT name FROM litespread_column WHERE table_name = ?', [tableName]);
     const col_insert = this.db.prepare(`
           INSERT INTO litespread_column(table_name, name, position)
           VALUES (?, ?, ?)
       `);
     this.db.each(`PRAGMA table_info(${tableName})`, [], ({ cid, name }) => {
-      col_insert.run([tableName, name, cid]);
+      if (!existingCols.includes(name)) {
+        col_insert.run([tableName, name, cid]);
+      }
     });
   }
 
@@ -420,7 +428,7 @@ class View extends Table {
     const create = this.db.exec(
       `SELECT sql FROM sqlite_master WHERE name = '${this.name}'`
     )[0].values[0][0];
-    return create.match(/ AS (.*)/)[1]
+    return create.match(/\s+AS\s+([^]*)/)[1];
   }
 
   setSource(sql) {
@@ -428,6 +436,8 @@ class View extends Table {
       DROP VIEW ${this.name};
       CREATE VIEW ${this.name} AS ${sql};
     `);
+    this.parent.importTable(this.name, 'view');
+    this.schemaChanged();
   }
 }
 

@@ -244,3 +244,10 @@ it('addColumnWithDefaultName', () => {
   table.addColumnWithDefaultName('col');
   table.addColumnWithDefaultName('col', '1');
 });
+
+it('view: get/setSource', () => {
+  const doc = createTestDoc();
+  const view = doc.tables.filter(t => t.type === 'view')[0];
+  const sql = view.getSource();
+  view.setSource(sql);
+})

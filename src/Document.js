@@ -263,14 +263,12 @@ class ViewEditor extends React.PureComponent {
   constructor(props, context) {
     super(props, context);
 
-    console.log(this.props, this.props.view.getSource());
     this.state = {
       sql: this.props.view.getSource(),
     };
   }
 
   save = () => {
-    console.log(this.state.sql);
     this.props.view.setSource(this.state.sql);
     this.props.onClose();
   }

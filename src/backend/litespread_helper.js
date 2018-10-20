@@ -62,6 +62,7 @@ function addDbMethods(db) {
     db.changeRows(sqlStmt, params, 1);
   };
 
+  /** One single row as object */
   db.getAsObject = (sqlStmt, params) => {
     const stmt = db.prepare(sqlStmt);
     const obj = stmt.getAsObject(params || {});
@@ -69,6 +70,7 @@ function addDbMethods(db) {
     return obj;
   };
 
+  /** Rows as objects */
   db.getAsObjects = (sqlStmt, params) => {
     const stmt = db.prepare(sqlStmt);
     const results = [];
@@ -79,6 +81,23 @@ function addDbMethods(db) {
     stmt.free();
     return results;
   };
+
+  /** Rows as arrays */
+  db.get = (sqlStmt, params) => {
+    const stmt = db.prepare(sqlStmt);
+    const results = [];
+    stmt.bind(params);
+    while (stmt.step()) {
+      results.push(stmt.get());
+    }
+    stmt.free();
+    return results;
+  }
+
+  /** Single column as flattened array */
+  db.getCol = (sqlStmt, params) => {
+    return db.get(sqlStmt, params).map(row => row[0]);
+  }
 }
 
 export { findCols, addDbMethods };
