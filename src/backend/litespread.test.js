@@ -22,6 +22,10 @@ function createTestDoc() {
             department_id int
         );
     `);
+  db.run(`
+        CREATE VIEW v_employee AS
+        SELECT * FROM employee;
+  `);
   return new ls.Document(db);
 }
 
@@ -40,14 +44,18 @@ it('importDocument', () => {
   const doc = createTestDoc();
   let rows;
 
-  rows = doc.db.exec('SELECT table_name FROM litespread_table')[0].values;
+  rows = doc.db.exec(
+    'SELECT table_name FROM litespread_table ORDER BY table_name')[0].values;
   expect(rows[0]).toEqual(['employee']);
+  expect(rows[1]).toEqual(['v_employee']);
 
   rows = doc.db.exec(
-    'SELECT table_name, name, position FROM litespread_column'
+    'SELECT table_name, name, position FROM litespread_column ORDER BY 1, 3'
   )[0].values;
   expect(rows[0]).toEqual(['employee', 'name', 0]);
   expect(rows[1]).toEqual(['employee', 'department_id', 1]);
+  expect(rows[2]).toEqual(['v_employee', 'name', 0]);
+  expect(rows[3]).toEqual(['v_employee', 'department_id', 1]);
 });
 
 it('changeColumnName', () => {

@@ -298,8 +298,9 @@ class SpreadTable extends React.PureComponent {
     const col = this.props.table.columns[colIndex];
     const colType = colTypes[col.format] || 'generic';
     const { align, className } = colType;
+    const editable = this.props.table.type === 'table' && !col.formula;
     let classNames = {
-      'no-edit': col.formula,
+      'no-edit': !editable,
       ['text-' + align]: true,
       [className]: true
     };
@@ -324,9 +325,7 @@ class SpreadTable extends React.PureComponent {
       } else {
         return <Cell className={classNames} />;
       }
-    } else if (col.formula) {
-      return <Cell className={classNames}>{value}</Cell>;
-    } else {
+    } else if (editable) {
       return (
         <EditableCell
           onConfirm={value => this.onCellChange(value, rowIndex, colIndex)}
@@ -334,6 +333,8 @@ class SpreadTable extends React.PureComponent {
           value={value}
         />
       );
+    } else {
+      return <Cell className={classNames}>{value}</Cell>;
     }
   };
 

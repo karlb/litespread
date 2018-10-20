@@ -1,7 +1,7 @@
 var squel = require('squel');
 var helper = require('./litespread_helper.js');
 
-const LATEST_VERSION = 5;
+const LATEST_VERSION = 6;
 
 var formatters = {
   money: (x, c) =>
@@ -126,6 +126,11 @@ function upgradeDocument(db) {
     db.run('ALTER TABLE litespread_column ADD COLUMN precision int');
   } else if (api_version === 4) {
     db.run('ALTER TABLE litespread_table ADD COLUMN order_by text');
+  } else if (api_version === 5) {
+    db.run(`ALTER TABLE litespread_table
+      ADD COLUMN type text DEFAULT 'table'
+        CHECK (type IN ('table', 'view', 'pivot'))
+    `);
   }
 
   // increase api_version and continue until we're at the latest version
@@ -178,9 +183,9 @@ class Document {
     this.dataChangeCallbacks = [];
   }
 
-  importTable(tableName) {
-    this.db.run('INSERT INTO litespread_table(table_name) VALUES (?)', [
-      tableName
+  importTable(tableName, type) {
+    this.db.run('INSERT INTO litespread_table(table_name, type) VALUES (?, ?)', [
+      tableName, type
     ]);
     const col_insert = this.db.prepare(`
           INSERT INTO litespread_column(table_name, name, position)
@@ -216,6 +221,8 @@ class Document {
     this.db.run(`
           CREATE TABLE IF NOT EXISTS litespread_table (
               table_name text NOT NULL PRIMARY KEY,
+              type text DEFAULT 'table'
+                CHECK (type IN ('table', 'view', 'pivot')),
               description text,
               order_by text
           );
@@ -238,14 +245,20 @@ class Document {
       `);
     this.db.each(
       `
-        SELECT DISTINCT name AS table_name
+        SELECT DISTINCT name AS table_name, type
         FROM sqlite_master
-        WHERE type = 'table'
-          AND name NOT LIKE 'litespread_%'
+        WHERE (
+            type = 'table'
+            AND name NOT LIKE 'litespread_%'
+        ) OR (
+            type = 'view'
+            AND name NOT LIKE '%_raw'
+            AND name NOT LIKE '%_formatted'
+        )
         `,
       [],
-      ({ table_name }) => {
-        this.importTable(table_name);
+      ({ table_name, type }) => {
+        this.importTable(table_name, type);
       }
     );
 
@@ -294,6 +307,7 @@ class Table {
     this.db = db;
     this.parent = doc;
     this.name = tableRow.table_name;
+    this.type = tableRow.type;
     this.order_by = tableRow.order_by;
     this._updateColumns();
     this.hasFooter = this.columns.some(c => c.summary);
