@@ -422,6 +422,13 @@ class View extends Table {
     )[0].values[0][0];
     return create.match(/ AS (.*)/)[1]
   }
+
+  setSource(sql) {
+    this.db.run(`
+      DROP VIEW ${this.name};
+      CREATE VIEW ${this.name} AS ${sql};
+    `);
+  }
 }
 
 class Column {

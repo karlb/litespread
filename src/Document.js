@@ -1,7 +1,7 @@
 import React from 'react';
 import SQL from 'sql.js';
 import FileSaver from 'file-saver';
-import { Tree, Button, EditableText, Dialog, Classes, Intent } from '@blueprintjs/core';
+import { Tree, Button, EditableText, Dialog, Classes, Intent, TextArea } from '@blueprintjs/core';
 
 import SpreadTable from './SpreadTable.js';
 import MainNavbar from './MainNavbar.js';
@@ -259,24 +259,41 @@ class Document extends React.PureComponent {
 }
 
 
-const ViewEditor = props => {
-  return (
-    <Dialog isOpen={true} onClose={props.onClose} title={'Edit ' + props.view.name}>
-      <div className={Classes.DIALOG_BODY}>
-        <pre className={Classes.CODE_BLOCK}>
-          <code>
-            {props.view.getSource()}
-          </code>
-        </pre>
-      </div>
-      <div className={Classes.DIALOG_FOOTER}>
-        <div className={Classes.DIALOG_FOOTER_ACTIONS}>
-          <Button onClick={props.onClose}>Discard Changes</Button>
-          <Button intent={Intent.PRIMARY} onClick={props.onClose}>Save</Button>
+class ViewEditor extends React.PureComponent {
+  constructor(props, context) {
+    super(props, context);
+
+    console.log(this.props, this.props.view.getSource());
+    this.state = {
+      sql: this.props.view.getSource(),
+    };
+  }
+
+  save = () => {
+    console.log(this.state.sql);
+    this.props.view.setSource(this.state.sql);
+    this.props.onClose();
+  }
+
+  render() {
+    return (
+      <Dialog isOpen={true} onClose={this.props.onClose} title={'Edit ' + this.props.view.name}>
+        <div className={Classes.DIALOG_BODY}>
+          <TextArea
+            fill={true}
+            onChange={(event) => this.setState({ sql: event.target.value })}
+            value={this.state.sql}
+          />
         </div>
-      </div>
-    </Dialog>
-  );
+        <div className={Classes.DIALOG_FOOTER}>
+          <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+            <Button onClick={this.props.onClose}>Discard Changes</Button>
+            <Button intent={Intent.PRIMARY} onClick={this.save}>Save</Button>
+          </div>
+        </div>
+      </Dialog>
+    );
+  }
 };
 
 export { Document as default, loadAsDb };
