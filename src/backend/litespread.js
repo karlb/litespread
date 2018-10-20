@@ -471,14 +471,6 @@ class Column {
   }
 }
 
-function getTableDesc(db, tableName) {
-  let table = db.getAsObject(
-    `SELECT * FROM litespread_table WHERE table_name = '${tableName}'`
-  );
-
-  return new Table(db, table);
-}
-
 function sortRowids(db, tableName) {
   const orderBy = db.exec(
     `SELECT order_by FROM litespread_table WHERE table_name = '${tableName}'`
@@ -613,7 +605,6 @@ function toSafeName(name) {
 export {
   importParsedJson,
   changeColumnName,
-  getTableDesc,
   moveColumn,
   moveRow,
   addFormulaColumn,

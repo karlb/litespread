@@ -217,7 +217,7 @@ it('sortRowids', () => {
         INSERT INTO example
         VALUES (0), (1), (2), (3)
     `);
-    const table = ls.getTableDesc(doc.db, 'example');
+    const table = doc.tables[0];
     table.setCol('order_by', orderBy);
     table.sortRowids();
     let rows = doc.db.exec(`
