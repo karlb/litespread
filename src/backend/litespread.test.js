@@ -186,6 +186,10 @@ it('rename table', () => {
   const newTable = doc.tables[0];
   expect(newTable.name).toEqual('new_name');
   expect(newTable.columns.length).toEqual(table.columns.length);
+
+  // also see if renaming views works without errors
+  let view = doc.tables.filter(t => t.type === 'view')[0];
+  view.rename('new_view');
 });
 
 it('drop column', () => {

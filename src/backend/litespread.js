@@ -391,7 +391,13 @@ class Table {
   }
 
   rename(newName) {
-    this.db.run(`ALTER TABLE ${this.name} RENAME TO ${newName}`);
+    if (this.type === 'table') {
+      this.db.run(`ALTER TABLE ${this.name} RENAME TO ${newName}`);
+    } else if (this.type === 'view') {
+      const sql = this.getSource();
+      this.db.run(`CREATE VIEW ${newName} AS ${sql}`);
+      this.db.run(`DROP VIEW ${this.name}`);
+    }
     const params = { ':old': this.name, ':new': newName };
     this.db.run('PRAGMA foreign_keys = OFF');
     this.db.run(
