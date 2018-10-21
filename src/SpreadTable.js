@@ -236,12 +236,14 @@ class SpreadTable extends React.PureComponent {
     return (
       <div className="spreadtable-outer-container">
         <ButtonGroup>
-          <Button icon="add-row-bottom" onClick={this.addRow}>
-            Add Row
-          </Button>
-          <Button icon="add-column-right" onClick={this.addColumn}>
-            Add Data Column
-          </Button>
+          {this.props.table.type === 'table' && (<React.Fragment>
+            <Button icon="add-row-bottom" onClick={this.addRow}>
+              Add Row
+            </Button>
+            <Button icon="add-column-right" onClick={this.addColumn}>
+              Add Data Column
+            </Button>
+          </React.Fragment>)}
           <Button icon="function" onClick={this.addFormulaColumn}>
             Add Formula Column
           </Button>
