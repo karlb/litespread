@@ -165,7 +165,7 @@ class Document extends React.PureComponent {
       currentTableObj = this.state.lsdoc.tables[0];
     }
 
-    const tableNodes = this.state.lsdoc.tables.map((table, tableIndex) => {
+    const nodes = this.state.lsdoc.tables.map((table, tableIndex) => {
       const selected = table.name === currentTableObj.name;
       return {
         id: 'table-' + tableIndex,
@@ -212,6 +212,8 @@ class Document extends React.PureComponent {
         )
       };
     });
+    const tableNodes = nodes.filter(n => n.table.type === 'table');
+    const viewNodes = nodes.filter(n => n.table.type === 'view');
 
     return (
       <div className="App">
@@ -239,8 +241,27 @@ class Document extends React.PureComponent {
                 secondaryLabel: (
                   <Button
                     icon="add"
+                    minimal={true}
                     onClick={() => {
                       this.state.lsdoc.createTableWithDefaultName('table');
+                    }}
+                  />
+                )
+              },
+              {
+                id: 'views-section',
+                label: 'Views',
+                depth: 0,
+                path: 0,
+                isExpanded: true,
+                hasCaret: false,
+                childNodes: viewNodes,
+                secondaryLabel: (
+                  <Button
+                    icon="add"
+                    minimal={true}
+                    onClick={() => {
+                      this.state.lsdoc.createViewWithDefaultName('view');
                     }}
                   />
                 )

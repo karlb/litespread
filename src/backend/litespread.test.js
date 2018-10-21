@@ -237,6 +237,12 @@ it('createTableWithDefaultName', () => {
   doc.createTableWithDefaultName('table');
 });
 
+it('createViewWithDefaultName', () => {
+  const doc = createTestDoc();
+  doc.createViewWithDefaultName('table');
+  doc.createViewWithDefaultName('table');
+});
+
 it('addColumnWithDefaultName', () => {
   const doc = createTestDoc();
   const table = doc.tables[0];

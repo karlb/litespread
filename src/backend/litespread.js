@@ -315,6 +315,17 @@ class Document {
     this.update();
     this.schemaChanged();
   }
+
+  createViewWithDefaultName(defaultName) {
+    const name = findDefaultName(defaultName, this.tables.map(t => t.name));
+    this.db.run(`
+          CREATE VIEW ${name} AS
+          SELECT 1 AS col1, 2*2 AS col2;
+      `);
+    this.importTable(name, 'view');
+    this.update();
+    this.schemaChanged();
+  }
 }
 
 function makeTable(db, tableRow, doc) {
