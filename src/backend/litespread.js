@@ -351,12 +351,17 @@ class Table {
     let columns = [];
     this.db.each(
       `
-              SELECT litespread_column.*
-              FROM litespread_column
-                   JOIN pragma_table_info('${this.name}') USING (name)
-              WHERE table_name = '${this.name}'
-              ORDER BY position
-          `,
+          SELECT litespread_column.*
+          FROM (
+                  SELECT * FROM litespread_column
+                  WHERE table_name = '${this.name}'
+              ) litespread_column
+              LEFT JOIN (
+                  SELECT * FROM pragma_table_info('${this.name}')
+              ) schema USING (name)
+          WHERE (schema.name IS NOT NULL OR formula IS NOT NULL)
+          ORDER BY position
+      `,
       [],
       db_row => columns.push(new Column(this.db, db_row, this))
     );

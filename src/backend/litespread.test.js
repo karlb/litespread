@@ -21,6 +21,7 @@ function createTestDoc() {
             name text,
             department_id int
         );
+        INSERT INTO employee VALUES ('Jim', 1);
     `);
   db.run(`
         CREATE VIEW v_employee AS
@@ -248,7 +249,9 @@ it('addColumnWithDefaultName', () => {
   const table = doc.tables[0];
   table.addColumnWithDefaultName('col');
   table.addColumnWithDefaultName('col');
-  table.addColumnWithDefaultName('col', '1');
+  table.addColumnWithDefaultName('col', '1 + 1');
+  doc.update();
+  expect(doc.db.getCol('SELECT col3 FROM employee_raw')[0]).toEqual(2);
 });
 
 it('view: get/setSource', () => {
