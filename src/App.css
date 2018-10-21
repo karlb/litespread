@@ -92,6 +92,10 @@ body,
   min-width: 200px;
 }
 
+.view-editor textarea {
+  min-height: 45vh;
+}
+
 /* Work around invisible text while editing. See https://github.com/palantir/blueprint/issues/2236 */
 .bp3-tree .bp3-editable-text {
   color: black;

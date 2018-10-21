@@ -275,7 +275,9 @@ class ViewEditor extends React.PureComponent {
 
   render() {
     return (
-      <Dialog isOpen={true} onClose={this.props.onClose} title={'Edit ' + this.props.view.name}>
+      <Dialog isOpen={true} onClose={this.props.onClose} title={'Edit ' + this.props.view.name}
+        className="view-editor"
+      >
         <div className={Classes.DIALOG_BODY}>
           <TextArea
             fill={true}
