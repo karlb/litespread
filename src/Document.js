@@ -6,6 +6,7 @@ import {
   Button,
   EditableText,
   Dialog,
+  Callout,
   Classes,
   Intent,
   TextArea
@@ -293,13 +294,18 @@ class ViewEditor extends React.PureComponent {
     super(props, context);
 
     this.state = {
-      sql: this.props.view.getSource()
+      sql: this.props.view.getSource(),
+      error: null
     };
   }
 
-  save = () => {
-    this.props.view.setSource(this.state.sql);
-    this.props.onClose();
+  save = (event) => {
+    try {
+      this.props.view.setSource(this.state.sql);
+      this.props.onClose();
+    } catch (e) {
+      this.setState({ error: e.message });
+    }
   };
 
   render() {
@@ -316,6 +322,11 @@ class ViewEditor extends React.PureComponent {
             onChange={event => this.setState({ sql: event.target.value })}
             value={this.state.sql}
           />
+          {this.state.error && (
+            <Callout intent={Intent.WARNING}>
+              {this.state.error}
+            </Callout>
+          )}
         </div>
         <div className={Classes.DIALOG_FOOTER}>
           <div className={Classes.DIALOG_FOOTER_ACTIONS}>

@@ -455,12 +455,19 @@ class View extends Table {
   }
 
   setSource(sql) {
-    this.db.run(`
-      DROP VIEW ${this.name};
-      CREATE VIEW ${this.name} AS ${sql};
-    `);
-    this.parent.importTable(this.name, 'view');
-    this.schemaChanged();
+    try {
+      this.db.run(`
+        BEGIN;
+        DROP VIEW ${this.name};
+        CREATE VIEW ${this.name} AS ${sql};
+        COMMIT;
+      `);
+      this.parent.importTable(this.name, 'view');
+      this.schemaChanged();
+    } catch (e) {
+      this.db.run('ROLLBACK');
+      throw e;
+    }
   }
 }
 
