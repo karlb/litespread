@@ -162,14 +162,14 @@ function changeColumnName(db, table, colIndex, newName, skipCommit) {
 }
 
 function findDefaultName(defaultName, existingNames) {
-    let counter = 1;
-    existingNames.forEach(name => {
-      let match = RegExp(defaultName + '(\\d+)').exec(name);
-      if (match) {
-        counter = Math.max(parseInt(match[1], 10) + 1, counter);
-      };
-    });
-    return defaultName + counter;
+  let counter = 1;
+  existingNames.forEach(name => {
+    let match = RegExp(defaultName + '(\\d+)').exec(name);
+    if (match) {
+      counter = Math.max(parseInt(match[1], 10) + 1, counter);
+    }
+  });
+  return defaultName + counter;
 }
 
 class Document {
@@ -184,15 +184,20 @@ class Document {
   }
 
   importTable(tableName, type) {
-    if (!this.db.get(
-      'SELECT ? IN (SELECT table_name FROM litespread_table)', [tableName])[0][0]
+    if (
+      !this.db.get('SELECT ? IN (SELECT table_name FROM litespread_table)', [
+        tableName
+      ])[0][0]
     ) {
-      this.db.run('INSERT INTO litespread_table(table_name, type) VALUES (?, ?)', [
-        tableName, type
-      ]);
+      this.db.run(
+        'INSERT INTO litespread_table(table_name, type) VALUES (?, ?)',
+        [tableName, type]
+      );
     }
     const existingCols = this.db.getCol(
-      'SELECT name FROM litespread_column WHERE table_name = ?', [tableName]);
+      'SELECT name FROM litespread_column WHERE table_name = ?',
+      [tableName]
+    );
     const col_insert = this.db.prepare(`
           INSERT INTO litespread_column(table_name, name, position)
           VALUES (?, ?, (
@@ -314,10 +319,10 @@ class Document {
 
 function makeTable(db, tableRow, doc) {
   const classes = {
-    'table': Table,
-    'view': View
+    table: Table,
+    view: View
   };
-  return new classes[tableRow.type](db, tableRow, doc)
+  return new classes[tableRow.type](db, tableRow, doc);
 }
 
 class Table {
@@ -384,26 +389,28 @@ class Table {
     this.db.run('PRAGMA foreign_keys = ON');
   }
 
-  addColumn(colName, formula=null) {
+  addColumn(colName, formula = null) {
     if (!formula) {
       this.db.run(`
         ALTER TABLE ${this.name} ADD COLUMN '${colName}';
       `);
     }
-    this.db.run(`
+    this.db.run(
+      `
       INSERT INTO litespread_column(table_name, name, position, formula)
       VALUES ('${this.name}', '${colName}', (
         SELECT max(position) + 1
         FROM litespread_column
         WHERE table_name = '${this.name}'
       ), ?);
-    `, [formula]);
+    `,
+      [formula]
+    );
     this.schemaChanged();
   }
 
-  addColumnWithDefaultName(defaultName, formula=null) {
-    const name = findDefaultName(defaultName,
-                                 this.columns.map(c => c.name));
+  addColumnWithDefaultName(defaultName, formula = null) {
+    const name = findDefaultName(defaultName, this.columns.map(c => c.name));
     this.addColumn(name, formula);
     this._updateColumns();
   }

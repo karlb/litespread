@@ -1,7 +1,15 @@
 import React from 'react';
 import SQL from 'sql.js';
 import FileSaver from 'file-saver';
-import { Tree, Button, EditableText, Dialog, Classes, Intent, TextArea } from '@blueprintjs/core';
+import {
+  Tree,
+  Button,
+  EditableText,
+  Dialog,
+  Classes,
+  Intent,
+  TextArea
+} from '@blueprintjs/core';
 
 import SpreadTable from './SpreadTable.js';
 import MainNavbar from './MainNavbar.js';
@@ -33,7 +41,7 @@ class Document extends React.PureComponent {
     this.state = {
       db: null,
       last_db_change: null,
-      editView: null,
+      editView: null
     };
   }
 
@@ -207,7 +215,8 @@ class Document extends React.PureComponent {
 
     return (
       <div className="App">
-        <MainNavbar doc={this}
+        <MainNavbar
+          doc={this}
           remotestorageState={this.props.remotestorageState}
           remoteClient={this.props.remoteClient}
         />
@@ -247,7 +256,7 @@ class Document extends React.PureComponent {
             onSchemaChange={this.onSchemaChange}
           />
         </div>
-        { this.state.editView !== null && (
+        {this.state.editView !== null && (
           <ViewEditor
             view={this.state.editView}
             onClose={() => this.setState({ editView: null })}
@@ -258,42 +267,46 @@ class Document extends React.PureComponent {
   }
 }
 
-
 class ViewEditor extends React.PureComponent {
   constructor(props, context) {
     super(props, context);
 
     this.state = {
-      sql: this.props.view.getSource(),
+      sql: this.props.view.getSource()
     };
   }
 
   save = () => {
     this.props.view.setSource(this.state.sql);
     this.props.onClose();
-  }
+  };
 
   render() {
     return (
-      <Dialog isOpen={true} onClose={this.props.onClose} title={'Edit ' + this.props.view.name}
+      <Dialog
+        isOpen={true}
+        onClose={this.props.onClose}
+        title={'Edit ' + this.props.view.name}
         className="view-editor"
       >
         <div className={Classes.DIALOG_BODY}>
           <TextArea
             fill={true}
-            onChange={(event) => this.setState({ sql: event.target.value })}
+            onChange={event => this.setState({ sql: event.target.value })}
             value={this.state.sql}
           />
         </div>
         <div className={Classes.DIALOG_FOOTER}>
           <div className={Classes.DIALOG_FOOTER_ACTIONS}>
             <Button onClick={this.props.onClose}>Discard Changes</Button>
-            <Button intent={Intent.PRIMARY} onClick={this.save}>Save</Button>
+            <Button intent={Intent.PRIMARY} onClick={this.save}>
+              Save
+            </Button>
           </div>
         </div>
       </Dialog>
     );
   }
-};
+}
 
 export { Document as default, loadAsDb };

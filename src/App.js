@@ -1,6 +1,12 @@
 import React from 'react';
 import SQL from 'sql.js';
-import { FocusStyleManager, Card, Classes, Dialog, NonIdealState } from '@blueprintjs/core';
+import {
+  FocusStyleManager,
+  Card,
+  Classes,
+  Dialog,
+  NonIdealState
+} from '@blueprintjs/core';
 import '@blueprintjs/core/lib/css/blueprint.css';
 import '@blueprintjs/icons/lib/css/blueprint-icons.css';
 import RemoteStorage from 'remotestoragejs';
@@ -70,7 +76,7 @@ class StartPage extends React.Component {
   render() {
     return (
       <div>
-        <MainNavbar remotestorageState={this.props.remotestorageState}/>
+        <MainNavbar remotestorageState={this.props.remotestorageState} />
         <div className="start-page">
           <h1 className={Classes.HEADING}>Litespread Documents</h1>
           <div className="big-actions">
@@ -132,7 +138,7 @@ class App extends React.Component {
       lastSync: null,
       connectionState: null,
       connectedAs: null,
-      error: null,
+      error: null
     };
   }
 
@@ -158,7 +164,7 @@ class App extends React.Component {
     remoteStorage.on('disconnected', () => {
       this.setState({ connectionState: 'not-connected' });
     });
-    remoteStorage.on('error', (error) => {
+    remoteStorage.on('error', error => {
       this.showError(error.name, error.message);
     });
 
@@ -179,7 +185,7 @@ class App extends React.Component {
       connectionState: this.state.connectionState,
       connectedAs: this.state.connectedAs,
       remoteClient: remoteClient,
-      remoteStorage: remoteStorage,
+      remoteStorage: remoteStorage
     };
     const DocWithProps = props => {
       return (
@@ -194,37 +200,41 @@ class App extends React.Component {
     return (
       <Router>
         <React.Fragment>
-          <Route exact path="/" render={
-            (props) => <StartPage {...props} remotestorageState={remotestorageState} />
-          } />
+          <Route
+            exact
+            path="/"
+            render={props => (
+              <StartPage {...props} remotestorageState={remotestorageState} />
+            )}
+          />
           <Route
             path="/:location(files|url)/:filename(.*)"
             render={DocWithProps}
           />
-          {this.state.error &&
-            <Dialog title={this.state.error.title} isOpen={true}
-              onClose={() => this.setState({error: null})}
+          {this.state.error && (
+            <Dialog
+              title={this.state.error.title}
+              isOpen={true}
+              onClose={() => this.setState({ error: null })}
             >
-              <div className={Classes.DIALOG_BODY}>
-                {this.state.error.text}
-              </div>
+              <div className={Classes.DIALOG_BODY}>{this.state.error.text}</div>
             </Dialog>
-          }
+          )}
         </React.Fragment>
       </Router>
     );
   }
 
   showError = (title, text) => {
-    this.setState({error: {title: title, text: text}})
-  }
+    this.setState({ error: { title: title, text: text } });
+  };
 }
 
 FocusStyleManager.onlyShowFocusOnTabs();
 
 const remoteStorage = new RemoteStorage({
   modules: [RemoteLitespread],
-  cache: true,
+  cache: true
   // logging: true,
 });
 remoteStorage.access.claim('litespread', 'rw');

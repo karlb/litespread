@@ -125,13 +125,15 @@ class SpreadTable extends React.PureComponent {
     };
     return (
       <Menu>
-        <MenuItem icon="percentage" text="Change Format"
-            // workaround for
-            // https://github.com/palantir/blueprint/issues/3010
-            popoverProps={{
-              hoverCloseDelay: 400,
-              captureDismiss: true,
-            }}
+        <MenuItem
+          icon="percentage"
+          text="Change Format"
+          // workaround for
+          // https://github.com/palantir/blueprint/issues/3010
+          popoverProps={{
+            hoverCloseDelay: 400,
+            captureDismiss: true
+          }}
         >
           <MenuDivider title="Types" />
           {Object.entries(colTypes).map(([id, c]) => (
@@ -144,8 +146,10 @@ class SpreadTable extends React.PureComponent {
                 this.props.onSchemaChange();
                 if (id === 'money' && !column.formula) {
                   // remove currency symbols from column
-                  this.props.db.create_function('remove_currency', x =>
-                    x === null ? null : x.replace(/ ?([$€£¥]|[A-Z]{3}) ?/, '')
+                  this.props.db.create_function(
+                    'remove_currency',
+                    x =>
+                      x === null ? null : x.replace(/ ?([$€£¥]|[A-Z]{3}) ?/, '')
                   );
                   column.updateData(`remove_currency(${column.name})`);
                   this.props.onDataChange();
@@ -232,9 +236,15 @@ class SpreadTable extends React.PureComponent {
     return (
       <div className="spreadtable-outer-container">
         <ButtonGroup>
-            <Button icon="add-row-bottom" onClick={this.addRow}>Add Row</Button>
-            <Button icon="add-column-right" onClick={this.addColumn}>Add Data Column</Button>
-            <Button icon="function" onClick={this.addFormulaColumn}>Add Formula Column</Button>
+          <Button icon="add-row-bottom" onClick={this.addRow}>
+            Add Row
+          </Button>
+          <Button icon="add-column-right" onClick={this.addColumn}>
+            Add Data Column
+          </Button>
+          <Button icon="function" onClick={this.addFormulaColumn}>
+            Add Formula Column
+          </Button>
         </ButtonGroup>
         <div className="spreadtable-container">
           <Table
@@ -284,11 +294,11 @@ class SpreadTable extends React.PureComponent {
               />
             ))}
           </Table>
-        {this.state.loadingError && (
-          <Callout className="pt-intent-danger">
-            {this.state.loadingError}
-          </Callout>
-        )}
+          {this.state.loadingError && (
+            <Callout className="pt-intent-danger">
+              {this.state.loadingError}
+            </Callout>
+          )}
         </div>
       </div>
     );
@@ -353,7 +363,12 @@ class SpreadTable extends React.PureComponent {
 
     return (
       <React.Fragment>
-        {sort && <Icon icon={'sort-' + sort} style={{ margin: '6px 4px', float: 'right' }} />}
+        {sort && (
+          <Icon
+            icon={'sort-' + sort}
+            style={{ margin: '6px 4px', float: 'right' }}
+          />
+        )}
         <EditableName
           name={name}
           onConfirm={value => this.changeColumnName(colIndex, value)}
@@ -376,7 +391,9 @@ class SpreadTable extends React.PureComponent {
         nameRenderer={this.nameRenderer}
       >
         {col.formula && (
-          <div className={`formula ${Classes.TEXT_MUTED} ${Classes.TEXT_SMALL}`}>
+          <div
+            className={`formula ${Classes.TEXT_MUTED} ${Classes.TEXT_SMALL}`}
+          >
             =&nbsp;
             <EditableText
               defaultValue={col.formula}

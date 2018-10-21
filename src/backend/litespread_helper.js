@@ -92,12 +92,12 @@ function addDbMethods(db) {
     }
     stmt.free();
     return results;
-  }
+  };
 
   /** Single column as flattened array */
   db.getCol = (sqlStmt, params) => {
     return db.get(sqlStmt, params).map(row => row[0]);
-  }
+  };
 }
 
 export { findCols, addDbMethods };

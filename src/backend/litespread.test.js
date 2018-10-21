@@ -45,7 +45,8 @@ it('importDocument', () => {
   let rows;
 
   rows = doc.db.exec(
-    'SELECT table_name FROM litespread_table ORDER BY table_name')[0].values;
+    'SELECT table_name FROM litespread_table ORDER BY table_name'
+  )[0].values;
   expect(rows[0]).toEqual(['employee']);
   expect(rows[1]).toEqual(['v_employee']);
 
@@ -230,7 +231,6 @@ it('sortRowids', () => {
   checkResult('value DESC', [3, 2, 1, 0]);
 });
 
-
 it('createTableWithDefaultName', () => {
   const doc = createTestDoc();
   doc.createTableWithDefaultName('table');
@@ -261,4 +261,4 @@ it('view: get/setSource', () => {
   doc.update();
   view = doc.tables.filter(t => t.type === 'view')[0];
   expect(view.columns.map(c => c.name)).toEqual(['name', 'bacon']);
-})
+});
