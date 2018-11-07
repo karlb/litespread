@@ -299,7 +299,7 @@ class ViewEditor extends React.PureComponent {
     };
   }
 
-  save = (event) => {
+  save = event => {
     try {
       this.props.view.setSource(this.state.sql);
       this.props.onClose();
@@ -323,9 +323,7 @@ class ViewEditor extends React.PureComponent {
             value={this.state.sql}
           />
           {this.state.error && (
-            <Callout intent={Intent.WARNING}>
-              {this.state.error}
-            </Callout>
+            <Callout intent={Intent.WARNING}>{this.state.error}</Callout>
           )}
         </div>
         <div className={Classes.DIALOG_FOOTER}>
