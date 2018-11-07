@@ -1,0 +1,11 @@
+#logo {
+  height: 150px;
+  display: flex;
+  justify-content: center;
+}
+#logo h1 {
+  margin-top: 10%;
+}
+#logo img {
+  margin-right: 2%;
+}

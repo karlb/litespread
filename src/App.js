@@ -10,14 +10,20 @@ import {
 import '@blueprintjs/core/lib/css/blueprint.css';
 import '@blueprintjs/icons/lib/css/blueprint-icons.css';
 import RemoteStorage from 'remotestoragejs';
-import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Route,
+  Redirect,
+  Link
+} from 'react-router-dom';
 
 import RemoteLitespread from './RemoteFile.js';
 import Document, { loadAsDb } from './Document.js';
 import MainNavbar from './MainNavbar.js';
+import StartPage from './StartPage.js';
 import './App.css';
 
-class StartPage extends React.Component {
+class FilesPage extends React.Component {
   constructor(props, context) {
     super(props, context);
 
@@ -130,6 +136,10 @@ class StartPage extends React.Component {
   }
 }
 
+const Index = props => {
+  return <Redirect to="/files" />;
+};
+
 class App extends React.Component {
   constructor(props, context) {
     super(props, context);
@@ -204,7 +214,21 @@ class App extends React.Component {
             exact
             path="/"
             render={props => (
+              <Index {...props} remotestorageState={remotestorageState} />
+            )}
+          />
+          <Route
+            exact
+            path="/start"
+            render={props => (
               <StartPage {...props} remotestorageState={remotestorageState} />
+            )}
+          />
+          <Route
+            exact
+            path="/files"
+            render={props => (
+              <FilesPage {...props} remotestorageState={remotestorageState} />
             )}
           />
           <Route
