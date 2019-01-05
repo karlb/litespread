@@ -48,7 +48,11 @@ function make_raw_view(db, table) {
     todoCols.forEach(col => {
       col.deps = col.deps.difference(availableCols);
       if (col.deps.size === 0) {
-        s.field(col.formula || col.name, col.name);
+        if (col.formula) {
+          s.field(col.formula, col.name);
+        } else {
+          s.field('"' + col.name + '"', col.name);
+        }
         nextAvailableCols.add(col.name.toLowerCase());
       } else {
         nextTodoCols.push(col);
@@ -85,7 +89,7 @@ function make_raw_view(db, table) {
 
 function format_col(col, select) {
   var formatter = formatters[col.format] || (x => x);
-  return formatter(select || col.name, col) + ' AS ' + col.name;
+  return '"' + formatter(select || col.name, col) + '" AS "' + col.name + '"';
 }
 
 function make_formatted_view(db, table) {
@@ -673,7 +677,7 @@ function importParsedJson(db, json, tableName) {
 }
 
 function toSafeName(name) {
-  return name.replace(/\s+/g, '_').replace(/([a-zA-Z0-9_]+).*/, '$1');
+  return name.replace(/\s+|[.]/g, '_').replace(/([a-zA-Z0-9_]+).*/, '$1');
 }
 
 export {
