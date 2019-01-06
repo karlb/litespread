@@ -19,9 +19,10 @@ function createTestDoc() {
   db.run(`
         CREATE TABLE employee (
             name text,
-            department_id int
+            department_id int,
+            "evil.column name" text
         );
-        INSERT INTO employee VALUES ('Jim', 1);
+        INSERT INTO employee VALUES ('Jim', 1, null);
     `);
   db.run(`
         CREATE VIEW v_employee AS
@@ -56,8 +57,9 @@ it('importDocument', () => {
   )[0].values;
   expect(rows[0]).toEqual(['employee', 'name', 0]);
   expect(rows[1]).toEqual(['employee', 'department_id', 1]);
-  expect(rows[2]).toEqual(['v_employee', 'name', 0]);
-  expect(rows[3]).toEqual(['v_employee', 'department_id', 1]);
+  expect(rows[2]).toEqual(['employee', 'evil.column name', 2]);
+  expect(rows[3]).toEqual(['v_employee', 'name', 0]);
+  expect(rows[4]).toEqual(['v_employee', 'department_id', 1]);
 });
 
 it('changeColumnName', () => {
@@ -79,8 +81,16 @@ it('changeColumnName', () => {
     ).toEqual(1);
     doc.db.exec('ROLLBACK');
   }
-  testChange(0, 'emp_name', 'CREATE TABLE employee (emp_name,department_id)');
-  testChange(1, 'department', 'CREATE TABLE employee (name,department)');
+  testChange(
+    0,
+    'emp_name',
+    'CREATE TABLE employee ("emp_name","department_id","evil.column name")'
+  );
+  testChange(
+    1,
+    'department',
+    'CREATE TABLE employee ("name","department","evil.column name")'
+  );
 
   doc.update();
 });
@@ -96,7 +106,7 @@ it('addColumn', () => {
     `)[0].values;
   expect(rows[0]).toEqual(['name']);
   expect(rows[1]).toEqual(['department_id']);
-  expect(rows[2]).toEqual(['employed_since']);
+  expect(rows[3]).toEqual(['employed_since']);
 
   doc.update();
 });
@@ -199,14 +209,14 @@ it('drop column', () => {
   const table = doc.tables[0];
 
   // check litespread table
-  expect(table.columns.length).toEqual(1);
+  expect(table.columns.length).toEqual(2);
   expect(table.columns[0].name).toEqual('name');
 
   // check sql schema
   const cols = doc.db.exec(`
     PRAGMA table_info('employee')
   `)[0].values;
-  expect(cols.length).toEqual(1);
+  expect(cols.length).toEqual(2);
   expect(cols[0][1]).toEqual('name');
 });
 

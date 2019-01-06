@@ -17,6 +17,10 @@ var summaries = {
   avg: x => `avg(${x})`
 };
 
+function quote(x) {
+  return '"' + x + '"';
+}
+
 function make_raw_view(db, table) {
   let s = squel.select();
   if (table.from) {
@@ -89,7 +93,7 @@ function make_raw_view(db, table) {
 
 function format_col(col, select) {
   var formatter = formatters[col.format] || (x => x);
-  return '"' + formatter(select || col.name, col) + '" AS "' + col.name + '"';
+  return formatter(select || quote(col.name), col) + ' AS ' + quote(col.name);
 }
 
 function make_formatted_view(db, table) {
@@ -144,8 +148,8 @@ function upgradeDocument(db) {
 
 // skipCommit is useful for tests
 function changeColumnName(db, table, colIndex, newName, skipCommit) {
-  const oldCols = table.columns.filter(c => !c.formula).map(c => c.name);
-  const newCols = oldCols.map((c, i) => (i === colIndex ? newName : c));
+  const oldCols = table.columns.filter(c => !c.formula).map(c => quote(c.name));
+  const newCols = oldCols.map((c, i) => (i === colIndex ? quote(newName) : c));
   const q = `
         BEGIN;
             ALTER TABLE ${table.name} RENAME TO _old_table;
@@ -526,7 +530,7 @@ class Column {
       // actually drop column from SQL table
       const remaining_cols = this.table.columns
         .filter(c => c.name !== this.name)
-        .map(c => c.name)
+        .map(c => quote(c.name))
         .join(', ');
       this.db.run(`
         BEGIN;
