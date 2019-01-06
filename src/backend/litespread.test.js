@@ -20,7 +20,7 @@ function createTestDoc() {
         CREATE TABLE employee (
             name text,
             department_id int,
-            "evil.column name" text
+            "evil.Column name" text
         );
         INSERT INTO employee VALUES ('Jim', 1, null);
     `);
@@ -57,7 +57,7 @@ it('importDocument', () => {
   )[0].values;
   expect(rows[0]).toEqual(['employee', 'name', 0]);
   expect(rows[1]).toEqual(['employee', 'department_id', 1]);
-  expect(rows[2]).toEqual(['employee', 'evil.column name', 2]);
+  expect(rows[2]).toEqual(['employee', 'evil.Column name', 2]);
   expect(rows[3]).toEqual(['v_employee', 'name', 0]);
   expect(rows[4]).toEqual(['v_employee', 'department_id', 1]);
 });
@@ -84,12 +84,12 @@ it('changeColumnName', () => {
   testChange(
     0,
     'emp_name',
-    'CREATE TABLE employee ("emp_name","department_id","evil.column name")'
+    'CREATE TABLE employee ("emp_name","department_id","evil.Column name")'
   );
   testChange(
     1,
     'department',
-    'CREATE TABLE employee ("name","department","evil.column name")'
+    'CREATE TABLE employee ("name","department","evil.Column name")'
   );
 
   doc.update();
@@ -264,6 +264,7 @@ it('addColumnWithDefaultName', () => {
   table.addColumnWithDefaultName('col');
   table.addColumnWithDefaultName('col');
   table.addColumnWithDefaultName('col', '1 + 1');
+  table.addColumnWithDefaultName('col', '"evil.Column name" + 1');
   doc.update();
   expect(doc.db.getCol('SELECT col3 FROM employee_raw')[0]).toEqual(2);
 });

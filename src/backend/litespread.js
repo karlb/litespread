@@ -34,7 +34,7 @@ function make_raw_view(db, table) {
   // calculate col depencencies
   table.columns.forEach(col => {
     if (col.formula) {
-      col.deps = new Set(helper.findCols(col.formula));
+      col.deps = new Set(helper.findCols(col.formula).map(c => c.toLowerCase()));
     } else {
       col.deps = new Set();
     }
@@ -65,6 +65,8 @@ function make_raw_view(db, table) {
 
     iterations++;
     if (iterations > 100) {
+      console.debug('availableCols', availableCols);
+      console.debug('deps', todoCols[0].deps);
       throw Error(
         'could not resolve dependencies for columns ' +
           todoCols.map(c => c.name).join(', ')
