@@ -85,6 +85,9 @@ class FilesPage extends React.Component {
         <MainNavbar remotestorageState={this.props.remotestorageState} />
         <div className="start-page">
           <h1 className={Classes.HEADING}>Litespread Documents</h1>
+          <div>
+            Litespread is viewer and editor for SQLite and CSV files with basic spreadsheet functionality. Saved files can be used with other SQLite compatible software without losing formatting, formulas, aggregate rows and views. <a href="https://bitbucket.org/karlb/litespread/wiki/">Read more&hellip;</a>
+          </div>
           <div className="big-actions">
             <Card interactive={true} onClick={this.newFile}>
               <NonIdealState
