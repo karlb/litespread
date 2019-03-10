@@ -34,7 +34,9 @@ function make_raw_view(db, table) {
   // calculate col depencencies
   table.columns.forEach(col => {
     if (col.formula) {
-      col.deps = new Set(helper.findCols(col.formula).map(c => c.toLowerCase()));
+      col.deps = new Set(
+        helper.findCols(col.formula).map(c => c.toLowerCase())
+      );
     } else {
       col.deps = new Set();
     }
