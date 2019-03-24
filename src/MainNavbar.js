@@ -111,7 +111,7 @@ class MainNavbar extends React.Component {
               type="text"
               name="username"
               autoFocus={true}
-              autocomplete="username"
+              autoComplete="username"
             />
             <Button type="submit" icon="log-in" intent="primary">
               Connect
