@@ -278,6 +278,7 @@ class Document {
         WHERE (
             type = 'table'
             AND name NOT LIKE 'litespread_%'
+            AND name NOT LIKE 'sqlite_%'
         ) OR (
             type = 'view'
             AND name NOT LIKE '%_raw'
