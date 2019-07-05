@@ -16,12 +16,16 @@ import {
   Redirect,
   Link
 } from 'react-router-dom';
+import * as Sentry from '@sentry/browser';
 
 import RemoteLitespread from './RemoteFile.js';
 import Document, { loadAsDb } from './Document.js';
 import MainNavbar from './MainNavbar.js';
 import StartPage from './StartPage.js';
 import './App.css';
+
+Sentry.init({dsn: "https://3acc6160c3ac43c09eb2e9bfcac854a4@sentry.io/1496942"});
+
 
 class FilesPage extends React.Component {
   constructor(props, context) {
@@ -169,6 +173,9 @@ class App extends React.Component {
       this.setState({
         connectionState: 'connected',
         connectedAs: userAddress
+      });
+      Sentry.configureScope((scope) => {
+        scope.setUser({"username": userAddress});
       });
     });
     remoteStorage.on('network-online', () => {
