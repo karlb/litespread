@@ -23,8 +23,13 @@ import Document, { loadAsDb } from './Document.js';
 import MainNavbar from './MainNavbar.js';
 import StartPage from './StartPage.js';
 import './App.css';
+import { version } from '../package.json';
 
-Sentry.init({dsn: "https://3acc6160c3ac43c09eb2e9bfcac854a4@sentry.io/1496942"});
+
+Sentry.init({
+  dsn: "https://3acc6160c3ac43c09eb2e9bfcac854a4@sentry.io/1496942",
+  release: version
+});
 
 
 class FilesPage extends React.Component {

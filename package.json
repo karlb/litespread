@@ -7,6 +7,7 @@
     "@blueprintjs/icons": "^3.6.0",
     "@blueprintjs/table": "^3.4.1",
     "@sentry/browser": "^5.4.3",
+    "@sentry/cli": "^1.46.0",
     "es6-shim": "^0.35.5",
     "file-saver": "^1.3.8",
     "immutability-helper": "^2.9.1",
