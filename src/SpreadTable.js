@@ -289,6 +289,10 @@ class SpreadTable extends React.PureComponent {
               );
               this.props.onDataChange();
             }}
+            getCellClipboardData={(row, col) => {
+              console.log(this.state.rows);
+              return this.state.rows[row][col + 1];
+            }}
             enableFocusedCell={true}
             enableMultipleSelection={false}
             loadingOptions={this.state.loadingOptions}
