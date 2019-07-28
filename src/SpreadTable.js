@@ -51,7 +51,7 @@ class SpreadTable extends React.PureComponent {
     if (result[0] === undefined) {
       this.setState({
         loadingOptions: [TableLoadingOption.CELLS],
-        loadingError: 'Table has now rows',
+        loadingError: 'Table has now rows'
       });
       return;
     }

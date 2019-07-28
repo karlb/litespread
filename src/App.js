@@ -25,12 +25,10 @@ import StartPage from './StartPage.js';
 import './App.css';
 import { version } from '../package.json';
 
-
 Sentry.init({
-  dsn: "https://3acc6160c3ac43c09eb2e9bfcac854a4@sentry.io/1496942",
+  dsn: 'https://3acc6160c3ac43c09eb2e9bfcac854a4@sentry.io/1496942',
   release: version
 });
-
 
 class FilesPage extends React.Component {
   constructor(props, context) {
@@ -179,8 +177,8 @@ class App extends React.Component {
         connectionState: 'connected',
         connectedAs: userAddress
       });
-      Sentry.configureScope((scope) => {
-        scope.setUser({"username": userAddress});
+      Sentry.configureScope(scope => {
+        scope.setUser({ username: userAddress });
       });
     });
     remoteStorage.on('network-online', () => {
