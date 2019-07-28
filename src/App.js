@@ -26,7 +26,7 @@ import './App.css';
 import { version } from '../package.json';
 
 Sentry.init({
-  dsn: 'https://3acc6160c3ac43c09eb2e9bfcac854a4@sentry.io/1496942',
+  dsn: window.location.href.indexOf('localhost') > -1 ? false : 'https://3acc6160c3ac43c09eb2e9bfcac854a4@sentry.io/1496942',
   release: version
 });
 
