@@ -22,7 +22,7 @@
     "source-map-explorer": "^1.7.0",
     "sql.js": "^0.5.0",
     "sqlite-parser": "^1.0.1",
-    "squel": "^5.12.1"
+    "squel": "^5.13.0"
   },
   "scripts": {
     "precommit": "lint-staged",
