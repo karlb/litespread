@@ -48,6 +48,13 @@ class SpreadTable extends React.PureComponent {
       });
       return;
     }
+    if (result[0] === undefined) {
+      this.setState({
+        loadingOptions: [TableLoadingOption.CELLS],
+        loadingError: 'Table has now rows',
+      });
+      return;
+    }
     const rows = result[0].values;
 
     this.setState({
@@ -249,6 +256,11 @@ class SpreadTable extends React.PureComponent {
           </Button>
         </ButtonGroup>
         <div className="spreadtable-container">
+          {this.state.loadingError && (
+            <Callout className="pt-intent-danger">
+              {this.state.loadingError}
+            </Callout>
+          )}
           <Table
             numRows={this.state.rows.length}
             enableColumnReordering={true}
@@ -296,11 +308,6 @@ class SpreadTable extends React.PureComponent {
               />
             ))}
           </Table>
-          {this.state.loadingError && (
-            <Callout className="pt-intent-danger">
-              {this.state.loadingError}
-            </Callout>
-          )}
         </div>
       </div>
     );
