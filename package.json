@@ -17,7 +17,7 @@
     "react": "^16.8.4",
     "react-dom": "^16.8.4",
     "react-router-dom": "^4",
-    "react-scripts": "^2",
+    "react-scripts": "2.1.0",
     "remotestoragejs": "^1.2.2",
     "source-map-explorer": "^1.7.0",
     "sql.js": "^0.5.0",
