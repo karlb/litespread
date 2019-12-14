@@ -23,45 +23,39 @@ import * as ls from './backend/litespread.js';
 import '@blueprintjs/table/lib/css/table.css';
 import colTypes from './col-types.js';
 
+
+function updateFromDb(table, db) {
+  let result;
+  try {
+    result = db.exec(`SELECT * FROM ${table.name}_formatted`);
+  } catch (e) {
+    return {
+      loadingOptions: [TableLoadingOption.CELLS],
+      loadingError: e.toString()
+    };
+  }
+  if (result[0] === undefined) {
+    return {
+      loadingOptions: [TableLoadingOption.CELLS],
+      loadingError: 'Table has now rows'
+    }
+  }
+  const rows = result[0].values;
+
+  return {
+    rows: rows,
+    loadingOptions: [],
+    loadingError: null
+  };
+}
+
+
 class SpreadTable extends React.PureComponent {
   constructor(props, context) {
     super(props, context);
     this.state = {
       rows: []
     };
-  }
-
-  componentWillMount() {
-    if (this.props.db) {
-      this.updateFromDb(this.props.db);
-    }
-  }
-
-  updateFromDb(db) {
-    let result;
-    try {
-      result = db.exec(`SELECT * FROM ${this.props.table.name}_formatted`);
-    } catch (e) {
-      this.setState({
-        loadingOptions: [TableLoadingOption.CELLS],
-        loadingError: e.toString()
-      });
-      return;
-    }
-    if (result[0] === undefined) {
-      this.setState({
-        loadingOptions: [TableLoadingOption.CELLS],
-        loadingError: 'Table has now rows'
-      });
-      return;
-    }
-    const rows = result[0].values;
-
-    this.setState({
-      rows: rows,
-      loadingOptions: [],
-      loadingError: null
-    });
   }
 
   onCellChange = (value, rowIndex, colIndex) => {
@@ -83,13 +77,13 @@ class SpreadTable extends React.PureComponent {
     this.props.onSchemaChange();
   };
 
-  componentWillReceiveProps = nextProps => {
-    if (nextProps.last_db_change !== this.state.last_refresh) {
-      this.updateFromDb(nextProps.db);
-      this.setState({
-        last_refresh: nextProps.last_db_change
-      });
+  static getDerivedStateFromProps(props, state) {
+    if (props.last_db_change !== state.last_refresh) {
+      let changes = updateFromDb(props.table, props.db);
+      changes.last_refresh= props.last_db_change;
+      return changes
     }
+    return null;
   };
 
   addRow = () => {
@@ -343,8 +337,11 @@ class SpreadTable extends React.PureComponent {
           );
         } else {
           return (
+            // Fragment use is a workaround for https://github.com/palantir/blueprint/issues/2446
             <Cell className={classNames}>
-              {summary} {value}
+              <React.Fragment>
+                {summary} {value}
+              </React.Fragment>
             </Cell>
           );
         }

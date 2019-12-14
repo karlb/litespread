@@ -168,7 +168,7 @@ class App extends React.Component {
     };
   }
 
-  componentWillMount() {
+  componentDidMount() {
     // handle connectionState
     remoteStorage.on('connected', () => {
       const userAddress = remoteStorage.remote.userAddress;
