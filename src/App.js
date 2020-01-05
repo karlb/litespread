@@ -97,7 +97,7 @@ class FilesPage extends React.Component {
             spreadsheet functionality. Saved files can be used with other SQLite
             compatible software without losing formatting, formulas, aggregate
             rows and views.{' '}
-            <a href="https://bitbucket.org/karlb/litespread/wiki/">
+            <a href="https://github.com/karlb/litespread/wiki">
               Read more&hellip;
             </a>
           </div>
