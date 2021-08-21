@@ -89,8 +89,8 @@ function make_raw_view(db, table) {
   }
 
   db.run(`
-        DROP VIEW IF EXISTS ${table.name}_raw;
-        CREATE VIEW ${table.name}_raw AS
+        DROP VIEW IF EXISTS "${table.name}_raw";
+        CREATE VIEW "${table.name}_raw" AS
         ${selectString}
     `);
 }
@@ -112,14 +112,14 @@ function make_formatted_view(db, table) {
     })
     .join(', ');
   let script = `
-        DROP VIEW IF EXISTS ${table.name}_formatted;
-        CREATE VIEW ${table.name}_formatted AS
-        SELECT rowid, ${select} FROM ${table.name}_raw
+        DROP VIEW IF EXISTS "${table.name}_formatted";
+        CREATE VIEW "${table.name}_formatted" AS
+        SELECT rowid, ${select} FROM "${table.name}_raw"
     `;
   if (table.hasFooter) {
     script += `
         UNION ALL
-        SELECT rowid, ${summary} FROM ${table.name}_raw
+        SELECT rowid, ${summary} FROM "${table.name}_raw"
     `;
   }
   db.run(script);
@@ -156,9 +156,9 @@ function changeColumnName(db, table, colIndex, newName, skipCommit) {
   const newCols = oldCols.map((c, i) => (i === colIndex ? quote(newName) : c));
   const q = `
         BEGIN;
-            ALTER TABLE ${table.name} RENAME TO _old_table;
-            CREATE TABLE ${table.name} (${newCols});
-            INSERT INTO ${table.name}
+            ALTER TABLE "${table.name}" RENAME TO _old_table;
+            CREATE TABLE "${table.name}" (${newCols});
+            INSERT INTO "${table.name}"
             SELECT ${oldCols}
             FROM _old_table;
             DROP TABLE _old_table;
@@ -539,8 +539,8 @@ class Column {
         .join(', ');
       this.db.run(`
         BEGIN;
-        ALTER TABLE ${this.table.name} RENAME TO __tmp;
-        CREATE TABLE ${this.table.name} AS
+        ALTER TABLE "${this.table.name}" RENAME TO __tmp;
+        CREATE TABLE "${this.table.name}" AS
         SELECT ${remaining_cols} FROM __tmp;
         DROP TABLE __tmp;
         COMMIT;
@@ -630,7 +630,7 @@ function moveRow(db, tableName, fromPosition, toPosition) {
   // afterwards. This avoids temporary violations of the unique constraint.
   const sql = `
       BEGIN;
-        UPDATE ${tableName}
+        UPDATE "${tableName}"
         SET rowid = 1000000 + CASE
             WHEN rowid = ${fromPosition} THEN ${toPosition}
             WHEN ${fromPosition} < ${toPosition} THEN
@@ -647,7 +647,7 @@ function moveRow(db, tableName, fromPosition, toPosition) {
               END
           END;
 
-        UPDATE ${tableName}
+        UPDATE "${tableName}"
         SET rowid = rowid - 1000000;
       COMMIT;
     `;

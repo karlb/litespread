@@ -84,12 +84,12 @@ it('changeColumnName', () => {
   testChange(
     0,
     'emp_name',
-    'CREATE TABLE employee ("emp_name","department_id","evil.Column name")'
+    'CREATE TABLE "employee" ("emp_name","department_id","evil.Column name")'
   );
   testChange(
     1,
     'department',
-    'CREATE TABLE employee ("name","department","evil.Column name")'
+    'CREATE TABLE "employee" ("name","department","evil.Column name")'
   );
 
   doc.update();
