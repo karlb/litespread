@@ -108,7 +108,7 @@ function make_formatted_view(db, table) {
       if (summary === undefined) {
         throw Error('Unknown summary: ' + col.summary);
       }
-      return format_col(col, summary(col.name));
+      return format_col(col, summary(quote(col.name)));
     })
     .join(', ');
   let script = `
