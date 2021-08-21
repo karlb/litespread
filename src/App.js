@@ -141,7 +141,7 @@ class FilesPage extends React.Component {
             ) : (
               <NonIdealState
                 title="No Files found"
-                description="Apparently you didn't save any files in Litespread, yet. Please use on of the actions above to work with Litespread. If you already have documents in your remoteStorage, please sign in from the menu at the top-right, now."
+                description="Apparently you didn't save any files in Litespread, yet. Please use one of the actions above to work with Litespread. If you already have documents in your remoteStorage, please sign in from the menu at the top-right."
                 icon="document"
               />
             )}
