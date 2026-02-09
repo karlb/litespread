@@ -26,6 +26,9 @@ function make_raw_view(db, table) {
   if (table.from) {
     s.from(table.from);
     s.field('null', 'rowid');
+  } else if (table.type === 'view') {
+    s.from(table.name);
+    s.field('null', 'rowid');
   } else {
     s.from(table.name);
     s.field('rowid');

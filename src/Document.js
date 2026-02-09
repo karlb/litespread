@@ -1,6 +1,6 @@
 import React from 'react';
-import SQL from 'sql.js';
-import FileSaver from 'file-saver';
+import sqlPromise from './initSql.js';
+import { saveAs } from 'file-saver';
 import {
   Tree,
   Button,
@@ -19,8 +19,8 @@ import { MIME_TYPE } from './RemoteFile.js';
 
 function loadAsDb(dataPromise, filename) {
   if (filename.endsWith('.csv')) {
-    return Promise.all([import('papaparse'), dataPromise]).then(
-      ([Papa, data]) => {
+    return Promise.all([import('papaparse'), dataPromise, sqlPromise]).then(
+      ([Papa, data, SQL]) => {
         const json = Papa.parse(data, {});
         const db = new SQL.Database();
         ls.importParsedJson(db, json, filename);
@@ -28,7 +28,7 @@ function loadAsDb(dataPromise, filename) {
       }
     );
   } else {
-    return dataPromise.then(data => {
+    return Promise.all([dataPromise, sqlPromise]).then(([data, SQL]) => {
       const uInt8Array = new Uint8Array(data);
       return new SQL.Database(uInt8Array);
     });
@@ -47,15 +47,15 @@ class Document extends React.PureComponent {
   }
 
   get filename() {
-    return this.props.match.params.filename;
+    return this.props.params.filename;
   }
 
   componentDidMount() {
     const self = this;
-    if (this.props.match.params.location === 'files') {
+    if (this.props.params.location === 'files') {
       console.log('Load from remotestorage ' + this.filename);
-      this.props.remoteClient.getFile(this.filename).then(
-        file => {
+      Promise.all([this.props.remoteClient.getFile(this.filename), sqlPromise]).then(
+        ([file, SQL]) => {
           const uInt8Array = new Uint8Array(file.data);
           const db = new SQL.Database(uInt8Array);
           self.receiveDb(db);
@@ -96,7 +96,7 @@ class Document extends React.PureComponent {
   };
 
   save = () => {
-    if (this.props.match.params.location === 'files') {
+    if (this.props.params.location === 'files') {
       this.props.remoteClient.save(
         this.filename,
         this.state.db.export().buffer
@@ -122,13 +122,13 @@ class Document extends React.PureComponent {
   // download file to disk
   saveFile = () => {
     const blob = new Blob([this.state.db.export()], { type: MIME_TYPE });
-    FileSaver.saveAs(blob, this.filename);
+    saveAs(blob, this.filename);
   };
 
   deleteFile = () => {
     this.props.remoteClient
       .remove(this.filename)
-      .then(() => this.props.history.push('/'));
+      .then(() => this.props.navigate('/'));
   };
 
   exportCSV = () => {
@@ -141,7 +141,7 @@ class Document extends React.PureComponent {
       const csv = Papa.unparse(json);
       const blob = new Blob([csv], { type: 'text/csv' });
       const filename = this.filename.split('.')[0] + '.csv';
-      FileSaver.saveAs(blob, filename);
+      saveAs(blob, filename);
     });
   };
 
@@ -149,7 +149,7 @@ class Document extends React.PureComponent {
     console.log(this.blob);
     this.props.remoteClient
       .add(requestedName, this.state.db.export().buffer)
-      .then(actualName => this.props.history.push('/files/' + actualName));
+      .then(actualName => this.props.navigate('/files/' + actualName));
 
     this.props.remoteClient.remove(this.filename);
   };

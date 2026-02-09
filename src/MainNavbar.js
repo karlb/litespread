@@ -11,7 +11,6 @@ import {
   Menu,
   MenuItem,
   Popover,
-  Position,
   EditableText,
   Intent
 } from '@blueprintjs/core';
@@ -70,7 +69,7 @@ class MainNavbar extends React.Component {
       );
 
       menus = (
-        <Popover content={fileMenu} position={Position.BOTTOM}>
+        <Popover content={fileMenu} placement="bottom">
           <Button minimal={true} icon="document">
             File
           </Button>
@@ -177,7 +176,7 @@ class MainNavbar extends React.Component {
           */}
           {menus}
           <NavbarDivider />
-          <Popover content={userMenu} position={Position.BOTTOM}>
+          <Popover content={userMenu} placement="bottom">
             <Button
               minimal={true}
               icon={connState === 'offline' ? 'offline' : 'user'}

@@ -132,8 +132,7 @@ class SpreadTable extends React.PureComponent {
           // workaround for
           // https://github.com/palantir/blueprint/issues/3010
           popoverProps={{
-            hoverCloseDelay: 400,
-            captureDismiss: true
+            hoverCloseDelay: 400
           }}
         >
           <MenuDivider title="Types" />
@@ -254,7 +253,7 @@ class SpreadTable extends React.PureComponent {
         </ButtonGroup>
         <div className="spreadtable-container">
           {this.state.loadingError && (
-            <Callout className="pt-intent-danger">
+            <Callout className="bp5-intent-danger">
               {this.state.loadingError}
             </Callout>
           )}

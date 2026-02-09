@@ -5,7 +5,7 @@
   text-align: right;
 }
 
-.bp3-table-column-name {
+.bp5-table-column-name {
   font-weight: bold;
 }
 
@@ -88,7 +88,7 @@ body,
   overflow: auto;
 }
 
-.bp3-tree {
+.bp5-tree {
   min-width: 200px;
 }
 
@@ -97,6 +97,6 @@ body,
 }
 
 /* Work around invisible text while editing. See https://github.com/palantir/blueprint/issues/2236 */
-.bp3-tree .bp3-editable-text {
+.bp5-tree .bp5-editable-text {
   color: black;
 }

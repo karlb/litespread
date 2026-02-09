@@ -12,14 +12,14 @@ let colTypes = {
     name: 'Number',
     icon: 'numerical',
     align: 'right',
-    className: 'pt-monospace-text',
+    className: 'bp5-monospace-text',
     defaultPrecision: 0
   },
   money: {
     name: 'Money',
     icon: 'dollar',
     align: 'right',
-    className: 'pt-monospace-text',
+    className: 'bp5-monospace-text',
     defaultPrecision: 2
   },
   date: {

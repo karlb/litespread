@@ -1,5 +1,5 @@
 import React from 'react';
-import SQL from 'sql.js';
+import sqlPromise from './initSql.js';
 import {
   FocusStyleManager,
   Card,
@@ -12,10 +12,12 @@ import '@blueprintjs/icons/lib/css/blueprint-icons.css';
 import RemoteStorage from 'remotestoragejs';
 import {
   BrowserRouter as Router,
+  Routes,
   Route,
-  Redirect,
+  Navigate,
   Link
 } from 'react-router-dom';
+import withRouter from './withRouter.js';
 import * as Sentry from '@sentry/browser';
 
 import RemoteLitespread from './RemoteFile.js';
@@ -23,10 +25,12 @@ import Document, { loadAsDb } from './Document.js';
 import MainNavbar from './MainNavbar.js';
 import StartPage from './StartPage.js';
 import './App.css';
-import { version } from '../package.json';
+import packageJson from '../package.json';
+const version = packageJson.version;
 
 Sentry.init({
-  dsn: window.location.href.indexOf('localhost') > -1 ? false : 'https://3acc6160c3ac43c09eb2e9bfcac854a4@sentry.io/1496942',
+  dsn: 'https://3acc6160c3ac43c09eb2e9bfcac854a4@sentry.io/1496942',
+  enabled: window.location.href.indexOf('localhost') === -1,
   release: version
 });
 
@@ -46,16 +50,18 @@ class FilesPage extends React.Component {
   }
 
   newFile = event => {
-    const db = new SQL.Database();
-    db.run(`
-      CREATE TABLE table1 (col1, col2, col3);
-      INSERT INTO table1 (col1)
-      VALUES (null), (null), (null);
-    `);
-    const filename = 'new_file.sqlite3';
-    remoteClient
-      .add(filename, db.export().buffer)
-      .then(() => this.props.history.push('/files/' + filename));
+    sqlPromise.then(SQL => {
+      const db = new SQL.Database();
+      db.run(`
+        CREATE TABLE table1 (col1, col2, col3);
+        INSERT INTO table1 (col1)
+        VALUES (null), (null), (null);
+      `);
+      const filename = 'new_file.sqlite3';
+      remoteClient
+        .add(filename, db.export().buffer)
+        .then(() => this.props.navigate('/files/' + filename));
+    });
   };
 
   uploadFile = event => {
@@ -70,7 +76,7 @@ class FilesPage extends React.Component {
     const save_and_redirect = data => {
       remoteClient
         .add(filename, data)
-        .then(() => self.props.history.push('/files/' + filename));
+        .then(() => self.props.navigate('/files/' + filename));
     };
 
     if (filename.endsWith('.csv')) {
@@ -131,7 +137,7 @@ class FilesPage extends React.Component {
           <Card>
             <h2 className={Classes.HEADING}>Your Files</h2>
             {this.state.files.length ? (
-              <ul className="pt-list-unstyled">
+              <ul className="bp5-list-unstyled">
                 {this.state.files.map(filename => (
                   <li key={filename}>
                     <Link to={'files/' + filename}>{filename}</Link>
@@ -152,9 +158,8 @@ class FilesPage extends React.Component {
   }
 }
 
-const Index = props => {
-  return <Redirect to="/files" />;
-};
+const WrappedFilesPage = withRouter(FilesPage);
+const WrappedDocument = withRouter(Document);
 
 class App extends React.Component {
   constructor(props, context) {
@@ -177,9 +182,7 @@ class App extends React.Component {
         connectionState: 'connected',
         connectedAs: userAddress
       });
-      Sentry.configureScope(scope => {
-        scope.setUser({ username: userAddress });
-      });
+      Sentry.setUser({ username: userAddress });
     });
     remoteStorage.on('network-online', () => {
       this.setState({ connectionState: 'connected' });
@@ -216,54 +219,46 @@ class App extends React.Component {
       remoteClient: remoteClient,
       remoteStorage: remoteStorage
     };
-    const DocWithProps = props => {
-      return (
-        <Document
-          {...props}
-          remoteClient={remoteClient}
-          remotestorageState={remotestorageState}
-        />
-      );
-    };
-
     return (
       <Router>
-        <React.Fragment>
+        <Routes>
+          <Route path="/" element={<Navigate to="/files" replace />} />
           <Route
-            exact
-            path="/"
-            render={props => (
-              <Index {...props} remotestorageState={remotestorageState} />
-            )}
-          />
-          <Route
-            exact
             path="/start"
-            render={props => (
-              <StartPage {...props} remotestorageState={remotestorageState} />
-            )}
+            element={<StartPage remotestorageState={remotestorageState} />}
           />
           <Route
-            exact
             path="/files"
-            render={props => (
-              <FilesPage {...props} remotestorageState={remotestorageState} />
-            )}
+            element={<WrappedFilesPage remotestorageState={remotestorageState} />}
           />
           <Route
-            path="/:location(files|url)/:filename(.*)"
-            render={DocWithProps}
+            path="/files/*"
+            element={
+              <WrappedDocument
+                remoteClient={remoteClient}
+                remotestorageState={remotestorageState}
+              />
+            }
           />
-          {this.state.error && (
-            <Dialog
-              title={this.state.error.title}
-              isOpen={true}
-              onClose={() => this.setState({ error: null })}
-            >
-              <div className={Classes.DIALOG_BODY}>{this.state.error.text}</div>
-            </Dialog>
-          )}
-        </React.Fragment>
+          <Route
+            path="/url/*"
+            element={
+              <WrappedDocument
+                remoteClient={remoteClient}
+                remotestorageState={remotestorageState}
+              />
+            }
+          />
+        </Routes>
+        {this.state.error && (
+          <Dialog
+            title={this.state.error.title}
+            isOpen={true}
+            onClose={() => this.setState({ error: null })}
+          >
+            <div className={Classes.DIALOG_BODY}>{this.state.error.text}</div>
+          </Dialog>
+        )}
       </Router>
     );
   }
