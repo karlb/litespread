@@ -1,5 +1,3 @@
-import * as moment from 'moment';
-
 let colTypes = {
   generic: {
     name: 'Text',
@@ -26,7 +24,10 @@ let colTypes = {
     name: 'Date',
     icon: 'calendar',
     align: 'right',
-    validator: x => moment.utc(x).toISOString(),
+    validator: x => {
+      const d = new Date(x);
+      return isNaN(d) ? x : d.toISOString();
+    },
     defaultPrecision: null
   }
 };
