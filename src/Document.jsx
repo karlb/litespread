@@ -11,8 +11,8 @@ import {
   TextArea
 } from '@blueprintjs/core';
 
-import SpreadTable from './SpreadTable.js';
-import MainNavbar from './MainNavbar.js';
+import SpreadTable from './SpreadTable.jsx';
+import MainNavbar from './MainNavbar.jsx';
 import * as ls from './backend/litespread.js';
 import { MIME_TYPE } from './RemoteFile.js';
 

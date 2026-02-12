@@ -17,13 +17,13 @@ import {
   Navigate,
   Link
 } from 'react-router-dom';
-import withRouter from './withRouter.js';
+import withRouter from './withRouter.jsx';
 import * as Sentry from '@sentry/browser';
 
 import RemoteLitespread from './RemoteFile.js';
-import Document, { loadAsDb } from './Document.js';
-import MainNavbar from './MainNavbar.js';
-import StartPage from './StartPage.js';
+import Document, { loadAsDb } from './Document.jsx';
+import MainNavbar from './MainNavbar.jsx';
+import StartPage from './StartPage.jsx';
 import './App.css';
 import packageJson from '../package.json';
 const version = packageJson.version;

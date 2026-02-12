@@ -2,41 +2,33 @@
   "name": "litespread",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@blueprintjs/core": "^5.0.0",
     "@blueprintjs/icons": "^5.0.0",
     "@blueprintjs/table": "^5.0.0",
     "@sentry/browser": "^8.0.0",
-    "file-saver": "^2.0.0",
-    "moment": "^2.30.0",
     "papaparse": "^5.4.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-router-dom": "^6.0.0",
-    "react-scripts": "^5.0.0",
     "remotestoragejs": "^1.2.2",
     "sql.js": "^1.0.0",
     "sqlite-parser": "^1.0.1",
     "squel": "^5.13.0"
   },
   "devDependencies": {
-    "@craco/craco": "^7.1.0",
     "@sentry/cli": "^1.46.0",
+    "@vitejs/plugin-react": "^4.0.0",
     "prettier": "^3.0.0",
-    "source-map-explorer": "^2.0.0"
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0"
   },
   "scripts": {
     "precommit": "lint-staged",
-    "analyze": "source-map-explorer build/static/js/main.*",
-    "start": "craco start",
-    "build": "craco build",
-    "test": "craco test --env=jsdom",
-    "eject": "react-scripts eject"
-  },
-  "browserslist": [
-    ">0.2%",
-    "not dead",
-    "not ie <= 11",
-    "not op_mini all"
-  ]
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  }
 }

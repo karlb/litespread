@@ -1,7 +1,7 @@
 import initSqlJs from 'sql.js';
 
 const sqlPromise = initSqlJs({
-  locateFile: file => `${process.env.PUBLIC_URL}/${file}`
+  locateFile: file => `/${file}`
 });
 
 export default sqlPromise;

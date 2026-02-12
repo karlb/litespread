@@ -1,5 +1,5 @@
-var squel = require('squel');
-var helper = require('./litespread_helper.js');
+import squel from 'squel';
+import * as helper from './litespread_helper.js';
 
 const LATEST_VERSION = 6;
 

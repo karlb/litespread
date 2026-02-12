@@ -1,4 +1,4 @@
-var sqliteParser = require('sqlite-parser');
+import sqliteParser from 'sqlite-parser';
 
 /////////////////////// findCols /////////////////////
 

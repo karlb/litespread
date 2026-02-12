@@ -1,4 +1,3 @@
-import fs from 'fs';
 import initSqlJs from 'sql.js';
 import Papa from 'papaparse';
 import * as ls from './litespread.js';
