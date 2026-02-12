@@ -1,6 +1,5 @@
 import React from 'react';
 import sqlPromise from './initSql.js';
-import { saveAs } from 'file-saver';
 import {
   Tree,
   Button,
@@ -122,7 +121,11 @@ class Document extends React.PureComponent {
   // download file to disk
   saveFile = () => {
     const blob = new Blob([this.state.db.export()], { type: MIME_TYPE });
-    saveAs(blob, this.filename);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = this.filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
   };
 
   deleteFile = () => {
@@ -141,7 +144,11 @@ class Document extends React.PureComponent {
       const csv = Papa.unparse(json);
       const blob = new Blob([csv], { type: 'text/csv' });
       const filename = this.filename.split('.')[0] + '.csv';
-      saveAs(blob, filename);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
     });
   };
 
