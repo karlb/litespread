@@ -67,7 +67,6 @@ class FilesPage extends React.Component {
   uploadFile = event => {
     const f = event.target.files[0];
     const r = new FileReader();
-    const self = this;
     const filename = document
       .getElementById('inputfile')
       .value.split(/[\\/]/)
@@ -76,7 +75,7 @@ class FilesPage extends React.Component {
     const save_and_redirect = data => {
       remoteClient
         .add(filename, data)
-        .then(() => self.props.navigate('/files/' + filename));
+        .then(() => this.props.navigate('/files/' + filename));
     };
 
     if (filename.endsWith('.csv')) {
@@ -197,17 +196,13 @@ class App extends React.Component {
       this.setState({ connectionState: 'not-connected' });
     });
     remoteStorage.on('error', error => {
+      console.error('Remotestorage error:', error);
       this.showError(error.name, error.message);
     });
 
     // handle sync
     remoteStorage.on('sync-done', () => {
       this.setState({ lastSync: new Date() });
-    });
-
-    // handle error
-    remoteStorage.on('error', error => {
-      console.error('Remotestorage error:', error);
     });
   }
 

@@ -16,6 +16,14 @@ import MainNavbar from './MainNavbar.jsx';
 import * as ls from './backend/litespread.js';
 import { MIME_TYPE } from './RemoteFile.js';
 
+function downloadBlob(blob, filename) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 function loadAsDb(dataPromise, filename) {
   if (filename.endsWith('.csv')) {
     return Promise.all([import('papaparse'), dataPromise, sqlPromise]).then(
@@ -50,21 +58,18 @@ class Document extends React.PureComponent {
   }
 
   componentDidMount() {
-    const self = this;
     if (this.props.params.location === 'files') {
-      console.log('Load from remotestorage ' + this.filename);
       Promise.all([this.props.remoteClient.getFile(this.filename), sqlPromise]).then(
         ([file, SQL]) => {
           const uInt8Array = new Uint8Array(file.data);
           const db = new SQL.Database(uInt8Array);
-          self.receiveDb(db);
+          this.receiveDb(db);
         },
         () => {
           console.error('Could not load file from remote storage!');
         }
       );
     } else {
-      console.log('Load from URL ' + this.filename);
       fetch(this.filename).then(result => {
         if (this.filename.endsWith('.csv')) {
           result = result.text();
@@ -112,7 +117,6 @@ class Document extends React.PureComponent {
   };
 
   onSchemaChange = () => {
-    console.log('schema changed');
     this.state.lsdoc.update();
     this.setState({ last_db_change: new Date() });
     this.save();
@@ -121,11 +125,7 @@ class Document extends React.PureComponent {
   // download file to disk
   saveFile = () => {
     const blob = new Blob([this.state.db.export()], { type: MIME_TYPE });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = this.filename;
-    a.click();
-    URL.revokeObjectURL(a.href);
+    downloadBlob(blob, this.filename);
   };
 
   deleteFile = () => {
@@ -135,25 +135,20 @@ class Document extends React.PureComponent {
   };
 
   exportCSV = () => {
-    const currentTableObj = this.state.lsdoc.tables.filter(
+    const currentTableObj = this.state.lsdoc.tables.find(
       t => t.name === this.state.currentTable
-    )[0];
+    );
     const json = currentTableObj.asJSON();
 
     return import('papaparse').then(Papa => {
       const csv = Papa.unparse(json);
       const blob = new Blob([csv], { type: 'text/csv' });
       const filename = this.filename.split('.')[0] + '.csv';
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(a.href);
+      downloadBlob(blob, filename);
     });
   };
 
   rename = requestedName => {
-    console.log(this.blob);
     this.props.remoteClient
       .add(requestedName, this.state.db.export().buffer)
       .then(actualName => this.props.navigate('/files/' + actualName));
@@ -166,9 +161,9 @@ class Document extends React.PureComponent {
       return null;
     }
 
-    let currentTableObj = this.state.lsdoc.tables.filter(
+    let currentTableObj = this.state.lsdoc.tables.find(
       t => t.name === this.state.currentTable
-    )[0];
+    );
     if (!currentTableObj) {
       currentTableObj = this.state.lsdoc.tables[0];
     }

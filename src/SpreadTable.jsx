@@ -37,7 +37,7 @@ function updateFromDb(table, db) {
   if (result[0] === undefined) {
     return {
       loadingOptions: [TableLoadingOption.CELLS],
-      loadingError: 'Table has now rows'
+      loadingError: 'Table has no rows'
     }
   }
   const rows = result[0].values;
@@ -63,12 +63,12 @@ class SpreadTable extends React.PureComponent {
     const validator = colTypes[col.format || 'generic'].validator;
     value = validator(value);
     let row = this.state.rows[rowIndex];
-    let sql = `
-                UPDATE ${this.props.table.name}
-                SET ${this.props.table.columns[colIndex].name} = '${value}'
-                WHERE _rowid_ = ${row[0]}
-        `;
-    this.props.db.exec(sql);
+    this.props.db.run(
+      `UPDATE "${this.props.table.name}"
+       SET "${this.props.table.columns[colIndex].name}" = ?
+       WHERE _rowid_ = ?`,
+      [value, row[0]]
+    );
     this.props.onDataChange();
   };
 
@@ -208,21 +208,11 @@ class SpreadTable extends React.PureComponent {
           />
           <MenuItem
             icon="sort-desc"
-            text={column.name + ' descening'}
+            text={column.name + ' descending'}
             onClick={() => setSort(column.name + ' DESC')}
           />
         </MenuItem>
         <MenuItem icon="trash" text="Delete Column" onClick={column.drop} />
-        {/*
-                {column.formula && <MenuItem icon="function" text="Change Formula" />}
-                <MenuItem icon="asterisk" text="Change Column Type">
-                    <MenuItem icon="asterisk" text="Generic" onClick={setGeneric}/>
-                    <MenuItem icon="function" text="Formula" onClick={() => column.setCol('formula', '1')} />
-                </MenuItem>
-                <MenuItem icon="wrench" text="Rename Column" />
-                <MenuItem icon="sort-asc" text="Sort Asc" />
-                <MenuItem icon="sort-desc" text="Sort Desc" />
-                */}
       </Menu>
     );
   };
@@ -286,14 +276,12 @@ class SpreadTable extends React.PureComponent {
               this.props.onDataChange();
             }}
             getCellClipboardData={(row, col) => {
-              console.log(this.state.rows);
               return this.state.rows[row][col + 1];
             }}
             enableFocusedCell={true}
             enableMultipleSelection={false}
             loadingOptions={this.state.loadingOptions}
             onColumnWidthChanged={(colIndex, width) => {
-              console.log(this.props.table.columns[colIndex].setCol);
               this.props.table.columns[colIndex].setCol('width', width);
             }}
             columnWidths={this.props.table.columns.map(c => c.width)}

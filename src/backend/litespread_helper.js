@@ -1,23 +1,25 @@
 import sqliteParser from 'sqlite-parser';
 
-/////////////////////// findCols /////////////////////
-
 /* eslint no-extend-native: ["error", { "exceptions": ["Set"] }] */
-Set.prototype.union = function(setB) {
-  var union = new Set(this);
-  for (var elem of setB) {
-    union.add(elem);
-  }
-  return union;
-};
+if (!Set.prototype.union) {
+  Set.prototype.union = function(setB) {
+    var union = new Set(this);
+    for (var elem of setB) {
+      union.add(elem);
+    }
+    return union;
+  };
+}
 
-Set.prototype.difference = function(setB) {
-  var difference = new Set(this);
-  for (var elem of setB) {
-    difference.delete(elem);
-  }
-  return difference;
-};
+if (!Set.prototype.difference) {
+  Set.prototype.difference = function(setB) {
+    var difference = new Set(this);
+    for (var elem of setB) {
+      difference.delete(elem);
+    }
+    return difference;
+  };
+}
 
 function traverse(o, func) {
   if (Array.isArray(o)) {

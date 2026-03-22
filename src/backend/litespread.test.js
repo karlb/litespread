@@ -39,12 +39,6 @@ function createTestDoc() {
 it('updateDocument', () => {
   const db = createTestDB();
   new ls.Document(db);
-  // const filename = '../test.sqlite3';
-  // const filebuffer = fs.readFileSync(filename);
-  // const db = new sql.Database(filebuffer);
-  //const data = db.export();
-  //const buffer = new Buffer(data);
-  //fs.writeFileSync(filename, buffer);
 });
 
 it('importDocument', () => {

@@ -31,20 +31,6 @@ class MainNavbar extends React.Component {
     if (this.props.doc) {
       const fileMenu = (
         <Menu>
-          {/*
-          <input
-            type="file"
-            style={{ display: '' }}
-            id="inputfile"
-            onChange={this.props.doc.uploadFile}
-            value=""
-          />
-          <MenuItem
-            icon="document-open"
-            text="Load from Disk"
-            onClick={() => document.getElementById('inputfile').click()}
-          />
-          */}
           <MenuItem
             icon="download"
             text="Save to Disk"
@@ -60,11 +46,6 @@ class MainNavbar extends React.Component {
             text="Delete File"
             onClick={this.openDeleteDialog}
           />
-          {/*
-          <MenuItem icon="folder-open" text="Synced Files">
-            <MenuItem icon="blank" text="..." />
-          </MenuItem>
-          */}
         </Menu>
       );
 
@@ -144,12 +125,6 @@ class MainNavbar extends React.Component {
               Get a free account
             </a>
           </p>
-          {/*
-          <MenuItem
-            icon="log-in"
-            text="Connect to remoteStorage"
-          />
-          */}
         </form>
       );
     }
@@ -169,11 +144,6 @@ class MainNavbar extends React.Component {
           )}
         </NavbarGroup>
         <NavbarGroup align="right">
-          {/*
-          <Button minimal={true} icon="home">
-            Home
-          </Button>
-          */}
           {menus}
           <NavbarDivider />
           <Popover content={userMenu} placement="bottom">
@@ -185,10 +155,6 @@ class MainNavbar extends React.Component {
                 this.props.remotestorageState.connectedAs}
             </Button>
           </Popover>
-          {/*
-          <Button minimal={true} icon="notifications" />
-          <Button minimal={true} icon="cog" />
-          */}
         </NavbarGroup>
         {this.state.deleteDialogOpen && (
           <DeleteDialog
@@ -205,12 +171,10 @@ const DeleteDialog = props => {
   return (
     <Alert
       {...props}
-      ////className={this.props.data.themeName}
       cancelButtonText="Cancel"
       confirmButtonText="Delete"
       icon="trash"
       intent={Intent.DANGER}
-      //isOpen={isOpen}
       isOpen={true}
       canEscapeKeyCancel={true}
     >
