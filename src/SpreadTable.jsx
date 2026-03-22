@@ -56,6 +56,7 @@ class SpreadTable extends React.PureComponent {
     this.state = {
       rows: []
     };
+    this._widthSaveTimer = null;
   }
 
   onCellChange = (value, rowIndex, colIndex) => {
@@ -122,7 +123,6 @@ class SpreadTable extends React.PureComponent {
     const setSort = orderBy => {
       table.setCol('order_by', orderBy);
       this.props.onSchemaChange();
-      this.props.onDataChange();
     };
     return (
       <Menu>
@@ -186,7 +186,6 @@ class SpreadTable extends React.PureComponent {
             onClick={() => {
               column.setCol('summary', null);
               this.props.onSchemaChange();
-              this.props.onDataChange();
             }}
           />
           <MenuItem
@@ -282,7 +281,17 @@ class SpreadTable extends React.PureComponent {
             enableMultipleSelection={false}
             loadingOptions={this.state.loadingOptions}
             onColumnWidthChanged={(colIndex, width) => {
-              this.props.table.columns[colIndex].setCol('width', width);
+              const col = this.props.table.columns[colIndex];
+              col.width = width;
+              this.props.db.run(
+                `UPDATE litespread_column SET width = ?
+                 WHERE table_name = ? AND name = ?`,
+                [width, col.table_name, col.name]
+              );
+              clearTimeout(this._widthSaveTimer);
+              this._widthSaveTimer = setTimeout(() => {
+                this.props.onDataChange();
+              }, 300);
             }}
             columnWidths={this.props.table.columns.map(c => c.width)}
             className="spreadtable"
