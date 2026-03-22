@@ -1,4 +1,4 @@
-const MIME_TYPE = 'application/x-sqlite3';
+const MIME_TYPE = 'application/x-sqlite3; charset=binary';
 
 var RemoteLitespread = {
   name: 'litespread',

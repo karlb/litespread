@@ -1,3 +1,4 @@
+import fs from 'fs';
 import initSqlJs from 'sql.js';
 import Papa from 'papaparse';
 import * as ls from './litespread.js';
@@ -284,4 +285,14 @@ it('view: get/setSource', () => {
   doc.update();
   view = doc.tables.filter(t => t.type === 'view')[0];
   expect(view.columns.map(c => c.name)).toEqual(['name', 'bacon']);
+});
+
+it('load plain.sqlite3', () => {
+  const buf = fs.readFileSync('src/backend/test-data/plain.sqlite3');
+  const db = new sql.Database(new Uint8Array(buf));
+  const doc = new ls.Document(db);
+  const table = doc.tables.find(t => t.type === 'table' && !t.name.startsWith('litespread_'));
+  expect(table).toBeDefined();
+  expect(table.name).toEqual('inventory');
+  expect(table.columns.map(c => c.name)).toEqual(['name', 'qty', 'price']);
 });
