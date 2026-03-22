@@ -145,7 +145,7 @@ class FilesPage extends React.Component {
               <ul className="bp5-list-unstyled">
                 {this.state.files.map(filename => (
                   <li key={filename}>
-                    <Link to={'files/' + filename}>{filename}</Link>
+                    <Link to={'/files/' + filename}>{filename}</Link>
                   </li>
                 ))}
               </ul>
