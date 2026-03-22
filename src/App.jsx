@@ -78,16 +78,22 @@ class FilesPage extends React.Component {
         .then(() => this.props.navigate('/files/' + filename));
     };
 
-    if (filename.endsWith('.csv')) {
-      r.onload = () =>
-        loadAsDb(r.result, filename).then(db =>
+    r.onload = () => {
+      const data = r.result;
+      const isSqlite =
+        new Uint8Array(data, 0, 6).every((b, i) => b === [0x53, 0x51, 0x4c, 0x69, 0x74, 0x65][i]);
+      if (isSqlite) {
+        save_and_redirect(data);
+      } else if (filename.endsWith('.csv')) {
+        const text = new TextDecoder().decode(data);
+        loadAsDb(text, filename).then(db =>
           save_and_redirect(db.export().buffer)
         );
-      r.readAsText(f);
-    } else {
-      r.onload = () => save_and_redirect(r.result);
-      r.readAsArrayBuffer(f);
-    }
+      } else {
+        save_and_redirect(data);
+      }
+    };
+    r.readAsArrayBuffer(f);
     event.target.value = null;
   };
 

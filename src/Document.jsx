@@ -24,10 +24,19 @@ function downloadBlob(blob, filename) {
   URL.revokeObjectURL(a.href);
 }
 
+function isSqliteData(data) {
+  if (typeof data === 'string') return data.startsWith('SQLite');
+  const header = new Uint8Array(data instanceof ArrayBuffer ? data : data.buffer, 0, 6);
+  return String.fromCharCode(...header) === 'SQLite';
+}
+
 function loadAsDb(dataPromise, filename) {
   if (filename.endsWith('.csv')) {
     return Promise.all([import('papaparse'), dataPromise, sqlPromise]).then(
       ([Papa, data, SQL]) => {
+        if (isSqliteData(data)) {
+          return new SQL.Database(new Uint8Array(data));
+        }
         const json = Papa.parse(data, {});
         const db = new SQL.Database();
         ls.importParsedJson(db, json, filename);
