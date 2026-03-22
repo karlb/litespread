@@ -1,5 +1,8 @@
-deploy:
-	rsync -avz --progress build/ -e ssh www.wikdict.com:hosts/litespread
+deploy: build
+	rsync -avz --progress dist/ -e ssh www.wikdict.com:hosts/litespread
+
+build:
+	npm run build
 
 pretty:
 	./node_modules/.bin/prettier --single-quote --write "src/**/*.{js,jsx,json,css}"
